@@ -5,6 +5,7 @@ import { Bell, LogOut, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MobileSidebar } from "@/components/layout/sidebar";
 
 export function Topbar({ userName, role }: { userName: string; role: string }) {
   const router = useRouter();
@@ -19,11 +20,16 @@ export function Topbar({ userName, role }: { userName: string; role: string }) {
   return (
     <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
       <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
-        <div className="min-w-0 flex-1">
+        <MobileSidebar />
+        <div className="hidden min-w-0 flex-1 sm:block">
           <div className="relative max-w-xl">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input className="pl-9" placeholder="Search students, receipts, schools..." />
           </div>
+        </div>
+        <div className="min-w-0 flex-1 sm:hidden">
+          <p className="truncate text-sm font-semibold">Prime Japanese</p>
+          <p className="text-xs text-muted-foreground">Agency CRM</p>
         </div>
         <Button variant="ghost" size="icon" aria-label="Notifications">
           <Bell className="h-4 w-4" />

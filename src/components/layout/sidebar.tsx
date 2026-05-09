@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import {
   BarChart3,
   BookOpenCheck,
@@ -10,13 +11,16 @@ import {
   GraduationCap,
   Home,
   Landmark,
+  Menu,
   MessageSquareMore,
   Receipt,
   Settings,
   ShieldCheck,
   Users,
-  WalletCards
+  WalletCards,
+  X
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -74,29 +78,60 @@ export function Sidebar() {
   );
 }
 
-export function MobileNav() {
+export function MobileSidebar() {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="sticky bottom-0 z-40 border-t bg-card/95 p-2 backdrop-blur lg:hidden">
-      <div className="grid grid-cols-5 gap-1">
-        {navItems.slice(0, 10).map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex flex-col items-center gap-1 rounded-md px-1 py-2 text-[11px] font-medium text-muted-foreground",
-                active && "bg-primary/10 text-primary"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              <span className="max-w-full truncate">{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
+    <>
+      <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)} aria-label="Open navigation menu">
+        <Menu className="h-5 w-5" />
+      </Button>
+
+      {open ? (
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true">
+          <button className="absolute inset-0 bg-background/80 backdrop-blur-sm" aria-label="Close navigation menu" onClick={() => setOpen(false)} />
+          <aside className="relative flex h-full w-[86vw] max-w-[340px] flex-col border-r bg-card shadow-2xl">
+            <div className="flex h-20 items-center justify-between gap-3 border-b px-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold leading-tight">Prime Japanese</p>
+                  <p className="text-xs text-muted-foreground">Agency CRM</p>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close navigation menu">
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+              {navItems.map((item) => {
+                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setOpen(false)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground",
+                      active && "bg-primary/10 text-primary"
+                    )}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="border-t p-4 text-xs leading-5 text-muted-foreground">
+              House# 68, Road# 12, Sector# 10, Uttara
+            </div>
+          </aside>
+        </div>
+      ) : null}
+    </>
   );
 }
