@@ -1,11 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { getDashboardMetrics, getExpenses, getPayments, getStudents } from "@/lib/queries";
+import { allBranchesValue, getSelectedBranchCookie } from "@/lib/branch-access";
+import { getBranches, getDashboardMetrics, getExpenses, getPayments, getStudents } from "@/lib/queries";
 import { formatCurrency, humanize } from "@/lib/utils";
 
 export default async function ReportsPage() {
-  const [metrics, students, payments, expenses] = await Promise.all([getDashboardMetrics(), getStudents(), getPayments(), getExpenses()]);
+  const [metrics, students, payments, expenses, branches, selectedBranchId] = await Promise.all([getDashboardMetrics(), getStudents(), getPayments(), getExpenses(), getBranches(), getSelectedBranchCookie()]);
+  const branchName = selectedBranchId === allBranchesValue ? "All Branches" : branches.find((branch) => branch.id === selectedBranchId)?.name ?? "Current branch";
   const coeRate = metrics.coeApplied ? Math.round((metrics.coeIssued / metrics.coeApplied) * 100) : 0;
   const visaRate = metrics.visaApplied ? Math.round((metrics.visaApproved / metrics.visaApplied) * 100) : 0;
 
@@ -16,6 +18,7 @@ export default async function ReportsPage() {
         <p className="mt-1 text-sm text-muted-foreground">Student, intake, payment, expense, profit/loss, visa success, and COE success reports.</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <ReportCard title="Branch filter" value={branchName} detail="Reports follow the global top-bar branch scope" />
         <ReportCard title="Student report" value={`${students.length} students`} detail={`${metrics.activeStudents} active records`} />
         <ReportCard title="Payment report" value={formatCurrency(metrics.monthlyIncome)} detail={`${payments.length} receipts`} />
         <ReportCard title="Expense report" value={formatCurrency(metrics.monthlyExpenses)} detail={`${expenses.length} expense entries`} />

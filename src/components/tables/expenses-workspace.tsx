@@ -15,6 +15,8 @@ import { formatCurrency, humanize } from "@/lib/utils";
 
 type Expense = {
   id: string;
+  branchId?: string | null;
+  branch?: { id: string; name: string } | null;
   category: string;
   title: string;
   amount: number | string;
@@ -24,6 +26,7 @@ type Expense = {
 };
 
 type Option = { value: string; label: string };
+type BranchOption = { id: string; name: string };
 type ExpenseMode = "closed" | "create" | "view" | "edit";
 
 const emptyExpense: Expense = {
@@ -36,27 +39,29 @@ const emptyExpense: Expense = {
   note: ""
 };
 
-export function ExpensesWorkspace({ initialExpenses, categories }: { initialExpenses: Expense[]; categories: Option[] }) {
+export function ExpensesWorkspace({ initialExpenses, categories, branches, defaultBranchId }: { initialExpenses: Expense[]; categories: Option[]; branches: BranchOption[]; defaultBranchId?: string }) {
   const [expenses, setExpenses] = useState(initialExpenses);
   const [mode, setMode] = useState<ExpenseMode>("closed");
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [query, setQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [branchFilter, setBranchFilter] = useState("ALL");
   const [saving, setSaving] = useState(false);
 
   const filteredExpenses = useMemo(() => {
     const search = query.trim().toLowerCase();
     return expenses.filter((expense) => {
       const matchesCategory = categoryFilter === "ALL" || expense.category === categoryFilter;
+      const matchesBranch = branchFilter === "ALL" || expense.branchId === branchFilter;
       const matchesSearch =
         !search ||
         [expense.title, expense.vendor, expense.category, expense.note]
           .join(" ")
           .toLowerCase()
           .includes(search);
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesBranch && matchesSearch;
     });
-  }, [categoryFilter, expenses, query]);
+  }, [branchFilter, categoryFilter, expenses, query]);
 
   const stats = useMemo(() => {
     const total = expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
@@ -144,7 +149,7 @@ export function ExpensesWorkspace({ initialExpenses, categories }: { initialExpe
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 lg:grid-cols-[1fr_240px]">
+          <div className="grid gap-3 lg:grid-cols-[1fr_220px_220px]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search expense, vendor, category, note..." />
@@ -152,6 +157,10 @@ export function ExpensesWorkspace({ initialExpenses, categories }: { initialExpe
             <Select value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} aria-label="Filter expense category">
               <option value="ALL">All categories</option>
               {categories.map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}
+            </Select>
+            <Select value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} aria-label="Filter expenses by branch">
+              <option value="ALL">All branches</option>
+              {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
             </Select>
           </div>
 
@@ -161,6 +170,7 @@ export function ExpensesWorkspace({ initialExpenses, categories }: { initialExpe
                 <TableRow>
                   <TableHead>Expense</TableHead>
                   <TableHead>Category</TableHead>
+                  <TableHead>Branch</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Vendor / payee</TableHead>
@@ -175,6 +185,7 @@ export function ExpensesWorkspace({ initialExpenses, categories }: { initialExpe
                       <div className="mt-1 max-w-[280px] truncate text-xs text-muted-foreground">{expense.note || "No note added"}</div>
                     </TableCell>
                     <TableCell><Badge variant="outline">{humanize(expense.category)}</Badge></TableCell>
+                    <TableCell><Badge variant="secondary">{expense.branch?.name ?? "Unassigned"}</Badge></TableCell>
                     <TableCell className="font-medium">{formatCurrency(expense.amount)}</TableCell>
                     <TableCell>{formatDate(expense.expenseDate)}</TableCell>
                     <TableCell>{expense.vendor || "No vendor"}</TableCell>
@@ -222,6 +233,7 @@ export function ExpensesWorkspace({ initialExpenses, categories }: { initialExpe
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   <InfoMini label="Amount" value={formatCurrency(expense.amount)} />
+                  <InfoMini label="Branch" value={expense.branch?.name ?? "Unassigned"} />
                   <InfoMini label="Date" value={formatDate(expense.expenseDate)} />
                   <InfoMini label="Vendor" value={expense.vendor || "No vendor"} />
                 </div>
@@ -248,7 +260,7 @@ export function ExpensesWorkspace({ initialExpenses, categories }: { initialExpe
           {mode === "view" && selectedExpense ? (
             <ExpenseProfile expense={selectedExpense} onEdit={() => setMode("edit")} onDelete={() => deleteExpense(selectedExpense.id)} />
           ) : (
-            <ExpenseForm expense={formExpense} categories={categories} onSubmit={saveExpense} saving={saving} submitLabel={mode === "create" ? "Add expense" : "Save expense"} />
+            <ExpenseForm expense={formExpense} categories={categories} branches={branches} defaultBranchId={defaultBranchId} onSubmit={saveExpense} saving={saving} submitLabel={mode === "create" ? "Add expense" : "Save expense"} />
           )}
         </ExpenseModal>
       ) : null}
@@ -256,10 +268,16 @@ export function ExpensesWorkspace({ initialExpenses, categories }: { initialExpe
   );
 }
 
-function ExpenseForm({ expense, categories, onSubmit, saving, submitLabel }: { expense: Expense; categories: Option[]; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; saving: boolean; submitLabel: string }) {
+function ExpenseForm({ expense, categories, branches, defaultBranchId, onSubmit, saving, submitLabel }: { expense: Expense; categories: Option[]; branches: BranchOption[]; defaultBranchId?: string; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; saving: boolean; submitLabel: string }) {
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
       <div className="grid gap-4 lg:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="branchId">Branch</Label>
+          <Select id="branchId" name="branchId" defaultValue={expense.branchId || defaultBranchId}>
+            {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+          </Select>
+        </div>
         <div className="space-y-2">
           <Label htmlFor="category">Category</Label>
           <Select id="category" name="category" defaultValue={expense.category || categories[0]?.value} required>
@@ -288,6 +306,7 @@ function ExpenseProfile({ expense, onEdit, onDelete }: { expense: Expense; onEdi
   return (
     <div className="space-y-5">
       <div className="grid gap-3 md:grid-cols-3">
+        <ProfileStat label="Branch" value={expense.branch?.name ?? "Unassigned"} />
         <ProfileStat label="Amount" value={formatCurrency(expense.amount)} />
         <ProfileStat label="Category" value={humanize(expense.category)} />
         <ProfileStat label="Expense date" value={formatDate(expense.expenseDate)} />
@@ -410,7 +429,7 @@ function Field({ label, name, type = "number", defaultValue, required }: { label
 
 function formatDate(value?: Date | string) {
   if (!value) return "Not set";
-  return new Date(value).toLocaleDateString();
+  return new Date(value).toLocaleDateString("en-GB", { timeZone: "UTC" });
 }
 
 function dateInput(value?: Date | string) {

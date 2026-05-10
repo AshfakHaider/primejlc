@@ -1,4 +1,4 @@
-import { Activity, Banknote, FileClock, Plane, TrendingDown, TrendingUp, Users } from "lucide-react";
+import { Activity, Banknote, FileClock, Plane, TrendingDown, TrendingUp, UserPlus, Users } from "lucide-react";
 import { DashboardCharts } from "@/components/charts/dashboard-charts";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,6 +13,7 @@ export default async function DashboardPage() {
 
   const cards = [
     { label: "Total students", value: metrics.totalStudents, icon: Users, note: `${metrics.activeStudents} active`, badge: "CRM" },
+    { label: "Total leads", value: metrics.totalLeads, icon: UserPlus, note: `${metrics.followUpPending} follow-ups pending`, badge: "Leads" },
     { label: "Pending documents", value: metrics.pendingDocuments, icon: FileClock, note: "Needs follow-up", badge: "Docs" },
     { label: "Monthly income", value: formatCurrency(metrics.monthlyIncome), icon: TrendingUp, note: "Paid amount", badge: "May" },
     { label: "Monthly expenses", value: formatCurrency(metrics.monthlyExpenses), icon: TrendingDown, note: "Recorded spend", badge: "May" },

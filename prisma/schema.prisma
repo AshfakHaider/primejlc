@@ -8,11 +8,32 @@ datasource db {
 }
 
 enum UserRole {
+  SUPER_ADMIN
+  BRANCH_MANAGER
   ADMIN
   COUNSELOR
   TEACHER
   ACCOUNTANT
   STAFF
+}
+
+model Branch {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  address     String
+  phone       String
+  managerName String
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users      User[]
+  leads      Lead[]
+  students   Student[]
+  batches    CourseBatch[]
+  admissions Admission[]
+  payments   Payment[]
+  expenses   Expense[]
 }
 
 model User {
@@ -22,18 +43,23 @@ model User {
   phone        String?
   passwordHash String
   role         UserRole @default(STAFF)
+  branchId     String?
   isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  branch           Branch?       @relation(fields: [branchId], references: [id])
   assignedStudents Student[] @relation("AssignedCounselor")
   taughtBatches    CourseBatch[]
   payments         Payment[]     @relation("PaymentReceivedBy")
   expenses         Expense[]     @relation("ExpenseRecordedBy")
+
+  @@index([branchId])
 }
 
 model Lead {
   id               String   @id @default(cuid())
+  branchId         String?
   name             String
   city             String?
   phoneNumber      String
@@ -46,6 +72,9 @@ model Lead {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  branch Branch? @relation(fields: [branchId], references: [id])
+
+  @@index([branchId])
   @@index([status, nextFollowUpDate])
   @@index([interestedIn])
   @@index([city])
@@ -53,6 +82,7 @@ model Lead {
 
 model Student {
   id                String            @id @default(cuid())
+  branchId          String?
   studentId         String            @unique
   fullName          String
   phone             String
@@ -72,16 +102,20 @@ model Student {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
+  branch            Branch?           @relation(fields: [branchId], references: [id])
   assignedCounselor User?             @relation("AssignedCounselor", fields: [assignedCounselorId], references: [id])
   admission         Admission?
   documents         DocumentChecklist?
   enrollments       Enrollment[]
   attendance        Attendance[]
   payments          Payment[]
+
+  @@index([branchId])
 }
 
 model CourseBatch {
   id                String            @id @default(cuid())
+  branchId          String?
   name              String
   teacherId         String?
   teacherName       String
@@ -99,10 +133,13 @@ model CourseBatch {
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
+  branch      Branch?       @relation(fields: [branchId], references: [id])
   teacher     User?         @relation(fields: [teacherId], references: [id])
   enrollments Enrollment[]
   attendance  Attendance[]
   sessions    CourseSession[]
+
+  @@index([branchId])
 }
 
 model Enrollment {
@@ -152,6 +189,7 @@ model CourseSession {
 
 model Admission {
   id              String            @id @default(cuid())
+  branchId        String?
   studentId       String            @unique
   currentStage    String            @default("LEAD")
   interviewDate   DateTime?
@@ -163,7 +201,10 @@ model Admission {
   notes           String?
   updatedAt       DateTime          @updatedAt
 
+  branch  Branch? @relation(fields: [branchId], references: [id])
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([branchId])
 }
 
 model DocumentChecklist {
@@ -213,6 +254,7 @@ model School {
 
 model Payment {
   id             String   @id @default(cuid())
+  branchId       String?
   receiptNo      String   @unique
   studentId      String
   admissionFee   Decimal  @default(0) @db.Decimal(12, 2)
@@ -226,12 +268,16 @@ model Payment {
   receivedById   String?
   createdAt      DateTime @default(now())
 
+  branch     Branch? @relation(fields: [branchId], references: [id])
   student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
   receivedBy User?   @relation("PaymentReceivedBy", fields: [receivedById], references: [id])
+
+  @@index([branchId])
 }
 
 model Expense {
   id           String          @id @default(cuid())
+  branchId     String?
   category     String
   title        String
   amount       Decimal         @db.Decimal(12, 2)
@@ -241,7 +287,10 @@ model Expense {
   recordedById String?
   createdAt    DateTime        @default(now())
 
-  recordedBy User? @relation("ExpenseRecordedBy", fields: [recordedById], references: [id])
+  branch     Branch? @relation(fields: [branchId], references: [id])
+  recordedBy User?   @relation("ExpenseRecordedBy", fields: [recordedById], references: [id])
+
+  @@index([branchId])
 }
 
 model AgencySetting {

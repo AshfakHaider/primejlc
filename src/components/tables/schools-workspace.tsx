@@ -503,7 +503,7 @@ function SelectField({ label, name, options = [], defaultValue }: { label: strin
 
 function formatDate(value?: Date | string) {
   if (!value) return "Not set";
-  return new Date(value).toLocaleDateString();
+  return new Date(value).toLocaleDateString("en-GB", { timeZone: "UTC" });
 }
 
 function dateInput(value?: Date | string) {

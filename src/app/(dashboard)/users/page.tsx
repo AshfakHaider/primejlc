@@ -11,7 +11,7 @@ export default async function UsersPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl">User Roles</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Role-based access for Admin, Counselor, Teacher, Accountant, and Staff.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Role-based access for Super Admin, Branch Manager, Counselor, Teacher, Accountant, and Staff.</p>
       </div>
       <Card>
         <CardHeader>
@@ -27,6 +27,7 @@ export default async function UsersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Branch</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -37,6 +38,7 @@ export default async function UsersPage() {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.phone || "N/A"}</TableCell>
                     <TableCell><Badge variant="outline">{humanize(user.role)}</Badge></TableCell>
+                    <TableCell><Badge variant="secondary">{user.branch?.name ?? "All branches"}</Badge></TableCell>
                     <TableCell><Badge variant={user.isActive ? "success" : "danger"}>{user.isActive ? "Active" : "Inactive"}</Badge></TableCell>
                   </TableRow>
                 ))}

@@ -12,9 +12,12 @@ import { humanize } from "@/lib/utils";
 
 type Option = { value: string; label: string };
 type CrmOptions = Record<string, Option[]>;
-type StudentOption = { id: string; fullName: string; studentId: string; programTrack: string; japaneseLevel: string };
+type BranchOption = { id: string; name: string };
+type StudentOption = { id: string; fullName: string; studentId: string; programTrack: string; japaneseLevel: string; branchId?: string | null };
 type Course = {
   id: string;
+  branchId?: string | null;
+  branch?: { id: string; name: string } | null;
   name: string;
   teacherName: string;
   classSchedule: string;
@@ -42,12 +45,16 @@ type Course = {
   }[];
 };
 
-export function BatchDetailWorkspace({ initialCourse, students, options }: { initialCourse: Course; students: StudentOption[]; options: CrmOptions }) {
+export function BatchDetailWorkspace({ initialCourse, students, options, branches, defaultBranchId }: { initialCourse: Course; students: StudentOption[]; options: CrmOptions; branches: BranchOption[]; defaultBranchId?: string }) {
   const [course, setCourse] = useState(initialCourse);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const languageStudents = students.filter((student) => student.programTrack === "LANGUAGE_PROGRAM" || student.programTrack === "LANGUAGE_AND_VISA");
+  const languageStudents = students.filter(
+    (student) =>
+      (student.programTrack === "LANGUAGE_PROGRAM" || student.programTrack === "LANGUAGE_AND_VISA") &&
+      (!course.branchId || !student.branchId || student.branchId === course.branchId)
+  );
   const availableStudents = useMemo(() => {
     const enrolledIds = new Set(course.enrollments.map((item) => item.student.id));
     return languageStudents.filter((student) => !enrolledIds.has(student.id));
@@ -121,6 +128,7 @@ export function BatchDetailWorkspace({ initialCourse, students, options }: { ini
             <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl">{course.name}</h1>
             <Badge variant={course.batchStatus === "COMPLETED" ? "success" : "outline"}>{humanize(course.batchStatus)}</Badge>
             <Badge variant="secondary">{course.targetLevel}</Badge>
+            {course.branch?.name ? <Badge variant="outline">{course.branch.name}</Badge> : null}
           </div>
           <p className="mt-2 text-sm text-muted-foreground">{course.syllabusName} · {course.teacherName} · {course.classSchedule}</p>
         </div>
@@ -137,7 +145,7 @@ export function BatchDetailWorkspace({ initialCourse, students, options }: { ini
             <CardDescription>Update batch setup, schedule, instructor, progress plan, and status.</CardDescription>
           </CardHeader>
           <CardContent>
-            <BatchForm course={course} options={options} onSubmit={saveBatch} saving={saving} submitLabel="Save batch" />
+            <BatchForm course={course} options={options} branches={branches} defaultBranchId={defaultBranchId} onSubmit={saveBatch} saving={saving} submitLabel="Save batch" />
           </CardContent>
         </Card>
       ) : (

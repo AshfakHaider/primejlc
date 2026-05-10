@@ -3,16 +3,21 @@ import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { getSession } from "@/lib/auth";
+import { allBranchesValue, canViewAllBranches, getSelectedBranchCookie } from "@/lib/branch-access";
+import { getBranches } from "@/lib/queries";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/login");
+  const [branches, selectedCookie] = await Promise.all([getBranches(), getSelectedBranchCookie()]);
+  const canSelectAll = canViewAllBranches(session.role);
+  const selectedBranchId = canSelectAll ? selectedCookie : session.branchId ?? branches[0]?.id ?? allBranchesValue;
 
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
       <div className="min-w-0 lg:pl-72">
-        <Topbar userName={session.name} role={session.role} />
+        <Topbar userName={session.name} role={session.role} branches={branches} selectedBranchId={selectedBranchId} canViewAllBranches={canSelectAll} />
         <main className="min-h-[calc(100vh-4rem)] w-full max-w-full overflow-x-hidden p-4 sm:p-6 lg:pb-8">{children}</main>
       </div>
     </div>

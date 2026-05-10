@@ -30,7 +30,8 @@ import { humanize } from "@/lib/utils";
 
 type Option = { value: string; label: string };
 type CrmOptions = Record<string, Option[]>;
-type StudentOption = { id: string; fullName: string; studentId: string; programTrack: string; japaneseLevel: string };
+type BranchOption = { id: string; name: string };
+type StudentOption = { id: string; fullName: string; studentId: string; programTrack: string; japaneseLevel: string; branchId?: string | null };
 type Enrollment = { student: { id: string; fullName: string; studentId: string; phone?: string }; feeStatus?: string; progressPercent?: number };
 type Attendance = { studentId: string; present: boolean; date?: string | Date; note?: string | null };
 type Session = {
@@ -45,6 +46,8 @@ type Session = {
 };
 type Course = {
   id: string;
+  branchId?: string | null;
+  branch?: { id: string; name: string } | null;
   name: string;
   teacherName: string;
   classSchedule: string;
@@ -83,12 +86,13 @@ const emptyCourse: Course = {
   sessions: []
 };
 
-export function CoursesWorkspace({ initialCourses, students, options }: { initialCourses: Course[]; students: StudentOption[]; options: CrmOptions }) {
+export function CoursesWorkspace({ initialCourses, students, options, branches, defaultBranchId }: { initialCourses: Course[]; students: StudentOption[]; options: CrmOptions; branches: BranchOption[]; defaultBranchId?: string }) {
   const router = useRouter();
   const [courses, setCourses] = useState(initialCourses);
   const [selectedId, setSelectedId] = useState(initialCourses[0]?.id ?? "");
   const [mode, setMode] = useState<"closed" | "create" | "view" | "edit">("closed");
   const [query, setQuery] = useState("");
+  const [branchFilter, setBranchFilter] = useState("ALL");
   const [saving, setSaving] = useState(false);
 
   const selectedCourse = courses.find((course) => course.id === selectedId) ?? courses[0] ?? null;
@@ -97,18 +101,20 @@ export function CoursesWorkspace({ initialCourses, students, options }: { initia
   const averageProgress = courses.length ? Math.round(courses.reduce((sum, course) => sum + batchProgress(course), 0) / courses.length) : 0;
 
   const filteredCourses = useMemo(() => {
-    return courses.filter((course) =>
-      [course.name, course.teacherName, course.targetLevel, course.syllabusName, course.batchStatus]
+    return courses.filter((course) => {
+      const matchesBranch = branchFilter === "ALL" || course.branchId === branchFilter;
+      const matchesQuery = [course.name, course.teacherName, course.targetLevel, course.syllabusName, course.batchStatus, course.branch?.name]
         .join(" ")
         .toLowerCase()
-        .includes(query.toLowerCase())
-    );
-  }, [courses, query]);
+        .includes(query.toLowerCase());
+      return matchesBranch && matchesQuery;
+    });
+  }, [branchFilter, courses, query]);
 
   const availableStudents = useMemo(() => {
     if (!selectedCourse) return languageStudents;
     const enrolledIds = new Set(selectedCourse.enrollments.map((item) => item.student.id));
-    return languageStudents.filter((student) => !enrolledIds.has(student.id));
+    return languageStudents.filter((student) => !enrolledIds.has(student.id) && (!selectedCourse.branchId || !student.branchId || student.branchId === selectedCourse.branchId));
   }, [languageStudents, selectedCourse]);
 
   async function createCourse(event: React.FormEvent<HTMLFormElement>) {
@@ -223,9 +229,15 @@ export function CoursesWorkspace({ initialCourses, students, options }: { initia
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="relative max-w-xl">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search batch, instructor, level, status..." value={query} onChange={(event) => setQuery(event.target.value)} />
+          <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Search batch, instructor, level, status..." value={query} onChange={(event) => setQuery(event.target.value)} />
+            </div>
+            <Select value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} aria-label="Filter batches by branch">
+              <option value="ALL">All branches</option>
+              {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+            </Select>
           </div>
 
           <div className="hidden overflow-x-auto rounded-lg border lg:block">
@@ -234,6 +246,7 @@ export function CoursesWorkspace({ initialCourses, students, options }: { initia
                 <TableRow>
                   <TableHead>Batch</TableHead>
                   <TableHead>Instructor</TableHead>
+                  <TableHead>Branch</TableHead>
                   <TableHead>Schedule</TableHead>
                   <TableHead>Students</TableHead>
                   <TableHead>Progress</TableHead>
@@ -251,6 +264,7 @@ export function CoursesWorkspace({ initialCourses, students, options }: { initia
                       </div>
                     </TableCell>
                     <TableCell>{course.teacherName}</TableCell>
+                    <TableCell><Badge variant="secondary">{course.branch?.name ?? "Unassigned"}</Badge></TableCell>
                     <TableCell>
                       <div className="text-sm">{formatDate(course.startDate)}</div>
                       <div className="text-xs text-muted-foreground">{course.classSchedule}</div>
@@ -277,6 +291,7 @@ export function CoursesWorkspace({ initialCourses, students, options }: { initia
                     <p className="truncate font-semibold">{course.name}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <TagChip>{course.targetLevel}</TagChip>
+                      {course.branch?.name ? <TagChip>{course.branch.name}</TagChip> : null}
                       <TagChip>{course.syllabusName}</TagChip>
                     </div>
                   </div>
@@ -311,7 +326,7 @@ export function CoursesWorkspace({ initialCourses, students, options }: { initia
             </Button>
           </div>
           <div className="max-h-[calc(90vh-88px)] overflow-y-auto p-5">
-            <BatchForm course={emptyCourse} options={options} onSubmit={createCourse} saving={saving} submitLabel="Create batch" />
+            <BatchForm course={emptyCourse} options={options} branches={branches} defaultBranchId={defaultBranchId} onSubmit={createCourse} saving={saving} submitLabel="Create batch" />
           </div>
         </CreateBatchModal>
       ) : null}
@@ -368,7 +383,8 @@ export function BatchProfile({
 
       {tab === "overview" ? (
         <div className="space-y-6">
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-5">
+            <Detail icon={GraduationCap} label="Branch" value={course.branch?.name ?? "Unassigned"} />
             <Detail icon={CalendarDays} label="Starting date" value={formatDate(course.startDate)} />
             <Detail icon={CalendarDays} label="Class days" value={course.classSchedule} />
             <Detail icon={GraduationCap} label="Course type" value={humanize(course.programTrack)} />
@@ -533,10 +549,11 @@ export function BatchProfile({
   );
 }
 
-export function BatchForm({ course, options, onSubmit, saving, submitLabel }: { course: Course; options: CrmOptions; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; saving: boolean; submitLabel: string }) {
+export function BatchForm({ course, options, branches = [], defaultBranchId, onSubmit, saving, submitLabel }: { course: Course; options: CrmOptions; branches?: BranchOption[]; defaultBranchId?: string; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; saving: boolean; submitLabel: string }) {
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
       <div className="grid gap-4 lg:grid-cols-3">
+        {branches.length ? <SelectField label="Branch" name="branchId" options={branches.map((branch) => ({ value: branch.id, label: branch.name }))} defaultValue={course.branchId || defaultBranchId} /> : null}
         <Field label="Batch name" name="name" defaultValue={course.name} required />
         <Field label="Course / syllabus name" name="syllabusName" defaultValue={course.syllabusName} required />
         <Field label="Instructor name" name="teacherName" defaultValue={course.teacherName} required />
@@ -668,7 +685,7 @@ function studentAttendance(course: Course, studentId: string) {
 
 function formatDate(value?: string | Date | null) {
   if (!value) return "Not set";
-  return new Date(value).toLocaleDateString();
+  return new Date(value).toLocaleDateString("en-GB", { timeZone: "UTC" });
 }
 
 function dateInput(value?: string | Date | null) {

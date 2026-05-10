@@ -16,6 +16,8 @@ import { leadInterestedInOptions, leadStatusOptions } from "@/lib/sample-data";
 
 type Lead = {
   id: string;
+  branchId?: string | null;
+  branch?: { id: string; name: string } | null;
   name: string;
   city?: string | null;
   phoneNumber: string;
@@ -28,6 +30,7 @@ type Lead = {
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
+type BranchOption = { id: string; name: string };
 
 type LeadMode = "closed" | "create" | "edit" | "note";
 
@@ -44,7 +47,7 @@ const emptyLead: Lead = {
   notes: ""
 };
 
-export function LeadsWorkspace({ initialLeads }: { initialLeads: Lead[] }) {
+export function LeadsWorkspace({ initialLeads, branches, defaultBranchId }: { initialLeads: Lead[]; branches: BranchOption[]; defaultBranchId?: string }) {
   const [leads, setLeads] = useState(initialLeads);
   const [mode, setMode] = useState<LeadMode>("closed");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -52,6 +55,7 @@ export function LeadsWorkspace({ initialLeads }: { initialLeads: Lead[] }) {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [cityFilter, setCityFilter] = useState("ALL");
   const [interestFilter, setInterestFilter] = useState("ALL");
+  const [branchFilter, setBranchFilter] = useState("ALL");
   const [viewMode, setViewMode] = useState<"kanban" | "list">("list");
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -64,15 +68,16 @@ export function LeadsWorkspace({ initialLeads }: { initialLeads: Lead[] }) {
       const matchesStatus = statusFilter === "ALL" || lead.status === statusFilter;
       const matchesCity = cityFilter === "ALL" || lead.city === cityFilter;
       const matchesInterest = interestFilter === "ALL" || lead.interestedIn === interestFilter;
+      const matchesBranch = branchFilter === "ALL" || lead.branchId === branchFilter;
       const matchesSearch =
         !search ||
         [lead.name, lead.city, lead.phoneNumber, lead.whatsappNumber, lead.facebookProfile, lead.interestedIn, lead.status, lead.notes]
           .join(" ")
           .toLowerCase()
           .includes(search);
-      return matchesStatus && matchesCity && matchesInterest && matchesSearch;
+      return matchesStatus && matchesCity && matchesInterest && matchesBranch && matchesSearch;
     });
-  }, [cityFilter, interestFilter, leads, query, statusFilter]);
+  }, [branchFilter, cityFilter, interestFilter, leads, query, statusFilter]);
 
   const columns = useMemo(
     () => (statusFilter === "ALL" ? leadStatusOptions : leadStatusOptions.filter((status) => status.value === statusFilter)),
@@ -208,7 +213,7 @@ export function LeadsWorkspace({ initialLeads }: { initialLeads: Lead[] }) {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 xl:grid-cols-[1fr_200px_200px_220px]">
+          <div className="grid gap-3 xl:grid-cols-[1fr_190px_190px_190px_210px]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name, city, phone, WhatsApp, Facebook, interest..." />
@@ -216,6 +221,10 @@ export function LeadsWorkspace({ initialLeads }: { initialLeads: Lead[] }) {
             <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter leads by status">
               <option value="ALL">All statuses</option>
               {leadStatusOptions.map((status) => <option key={status.value} value={status.value}>{status.label}</option>)}
+            </Select>
+            <Select value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} aria-label="Filter leads by branch">
+              <option value="ALL">All branches</option>
+              {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
             </Select>
             <Select value={cityFilter} onChange={(event) => setCityFilter(event.target.value)} aria-label="Filter leads by city">
               <option value="ALL">All cities</option>
@@ -295,7 +304,7 @@ export function LeadsWorkspace({ initialLeads }: { initialLeads: Lead[] }) {
           {mode === "note" && selectedLead ? (
             <LeadNoteForm lead={selectedLead} onSubmit={saveLeadNote} saving={saving} />
           ) : (
-            <LeadForm lead={formLead} onSubmit={saveLead} saving={saving} submitLabel={mode === "create" ? "Create lead" : "Save lead"} />
+            <LeadForm lead={formLead} branches={branches} defaultBranchId={defaultBranchId} onSubmit={saveLead} saving={saving} submitLabel={mode === "create" ? "Create lead" : "Save lead"} />
           )}
         </LeadModal>
       ) : null}
@@ -334,6 +343,7 @@ function LeadCard({
             {lead.city}
           </Badge>
         ) : null}
+        {lead.branch?.name ? <Badge variant="secondary">{lead.branch.name}</Badge> : null}
         <Badge variant="outline">{interestLabel(lead.interestedIn)}</Badge>
         {lead.nextFollowUpDate ? <Badge variant={isFollowUpDue(lead.nextFollowUpDate) ? "warning" : "outline"}>{formatDate(lead.nextFollowUpDate)}</Badge> : null}
       </div>
@@ -378,6 +388,7 @@ function LeadsList({ leads, onEdit, onNote, onDelete }: { leads: Lead[]; onEdit:
           <TableHeader>
             <TableRow>
               <TableHead className="w-[230px]">Lead</TableHead>
+              <TableHead className="w-[130px]">Branch</TableHead>
               <TableHead className="w-[130px]">City</TableHead>
               <TableHead className="w-[200px]">Interested In</TableHead>
               <TableHead className="w-[150px]">Status</TableHead>
@@ -394,6 +405,7 @@ function LeadsList({ leads, onEdit, onNote, onDelete }: { leads: Lead[]; onEdit:
                   <div className="truncate font-medium">{lead.name}</div>
                   <div className="truncate text-xs text-muted-foreground">{lead.phoneNumber}</div>
                 </TableCell>
+                <TableCell><Badge variant="secondary">{lead.branch?.name ?? "Unassigned"}</Badge></TableCell>
                 <TableCell><span className="block truncate">{lead.city || "Not set"}</span></TableCell>
                 <TableCell><Badge variant="outline">{interestLabel(lead.interestedIn)}</Badge></TableCell>
                 <TableCell><Badge variant={statusVariant(lead.status)}>{statusLabel(lead.status)}</Badge></TableCell>
@@ -449,6 +461,7 @@ function LeadsList({ leads, onEdit, onNote, onDelete }: { leads: Lead[]; onEdit:
             </div>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {lead.city ? <Badge variant="outline">{lead.city}</Badge> : null}
+              {lead.branch?.name ? <Badge variant="secondary">{lead.branch.name}</Badge> : null}
               <Badge variant="outline">{interestLabel(lead.interestedIn)}</Badge>
               <Badge variant={isFollowUpDue(lead.nextFollowUpDate) ? "warning" : "outline"}>{formatDate(lead.nextFollowUpDate)}</Badge>
             </div>
@@ -504,10 +517,11 @@ function QuickAction({ href, label, disabled, children }: { href: string; label:
   );
 }
 
-function LeadForm({ lead, onSubmit, saving, submitLabel }: { lead: Lead; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; saving: boolean; submitLabel: string }) {
+function LeadForm({ lead, branches, defaultBranchId, onSubmit, saving, submitLabel }: { lead: Lead; branches: BranchOption[]; defaultBranchId?: string; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; saving: boolean; submitLabel: string }) {
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
       <div className="grid gap-4 lg:grid-cols-2">
+        <SelectField label="Branch" name="branchId" options={branches.map((branch) => ({ value: branch.id, label: branch.name }))} defaultValue={lead.branchId || defaultBranchId} />
         <Field label="Name" name="name" defaultValue={lead.name} required />
         <Field label="City" name="city" defaultValue={lead.city ?? ""} />
         <Field label="Phone number" name="phoneNumber" defaultValue={lead.phoneNumber} required />
@@ -643,7 +657,7 @@ function statusVariant(status: string) {
 
 function formatDate(value?: Date | string | null) {
   if (!value) return "No follow-up";
-  return new Date(value).toLocaleDateString();
+  return new Date(value).toLocaleDateString("en-GB", { timeZone: "UTC" });
 }
 
 function dateInput(value?: Date | string | null) {

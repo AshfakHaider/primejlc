@@ -14,6 +14,8 @@ import { humanize } from "@/lib/utils";
 
 type Student = {
   id: string;
+  branchId?: string | null;
+  branch?: { id: string; name: string } | null;
   studentId: string;
   fullName: string;
   phone: string;
@@ -31,6 +33,7 @@ type Student = {
 
 type Option = { value: string; label: string };
 type CrmOptions = Record<string, Option[]>;
+type BranchOption = { id: string; name: string };
 
 const emptyStudent: Student = {
   id: "",
@@ -48,10 +51,11 @@ const emptyStudent: Student = {
   applicationStatus: "LEAD"
 };
 
-export function StudentsWorkspace({ initialStudents, options }: { initialStudents: Student[]; options: CrmOptions }) {
+export function StudentsWorkspace({ initialStudents, options, branches, defaultBranchId }: { initialStudents: Student[]; options: CrmOptions; branches: BranchOption[]; defaultBranchId?: string }) {
   const [students, setStudents] = useState(initialStudents);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("ALL");
+  const [branchFilter, setBranchFilter] = useState("ALL");
   const [mode, setMode] = useState<"closed" | "create" | "view" | "edit">("closed");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(initialStudents[0] ?? null);
   const [saving, setSaving] = useState(false);
@@ -64,9 +68,10 @@ export function StudentsWorkspace({ initialStudents, options }: { initialStudent
         .toLowerCase()
         .includes(query.toLowerCase());
       const matchesFilter = filter === "ALL" || student.applicationStatus === filter;
-      return matchesQuery && matchesFilter;
+      const matchesBranch = branchFilter === "ALL" || student.branchId === branchFilter;
+      return matchesQuery && matchesFilter && matchesBranch;
     });
-  }, [students, query, filter]);
+  }, [branchFilter, students, query, filter]);
 
   async function saveStudent(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -130,7 +135,7 @@ export function StudentsWorkspace({ initialStudents, options }: { initialStudent
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px]">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input className="pl-9" placeholder="Search by name, ID, phone, passport..." value={query} onChange={(event) => setQuery(event.target.value)} />
@@ -141,6 +146,10 @@ export function StudentsWorkspace({ initialStudents, options }: { initialStudent
                 <option key={status.value} value={status.value}>{status.label}</option>
               ))}
             </Select>
+            <Select value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} aria-label="Filter students by branch">
+              <option value="ALL">All branches</option>
+              {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+            </Select>
           </div>
 
           <div className="hidden overflow-x-auto rounded-lg border lg:block">
@@ -149,6 +158,7 @@ export function StudentsWorkspace({ initialStudents, options }: { initialStudent
                 <TableRow>
                   <TableHead>Student</TableHead>
                   <TableHead>Contact</TableHead>
+                  <TableHead>Branch</TableHead>
                   <TableHead>Program</TableHead>
                   <TableHead>Intake</TableHead>
                   <TableHead>Status</TableHead>
@@ -176,6 +186,7 @@ export function StudentsWorkspace({ initialStudents, options }: { initialStudent
                       <div>{student.phone}</div>
                       <div className="text-xs text-muted-foreground">{student.email || "No email"}</div>
                     </TableCell>
+                    <TableCell><Badge variant="secondary">{student.branch?.name ?? "Unassigned"}</Badge></TableCell>
                     <TableCell><Badge variant="outline">{humanize(student.programTrack)}</Badge></TableCell>
                     <TableCell><Badge variant="outline">{humanize(student.targetIntake)}</Badge></TableCell>
                     <TableCell>
@@ -224,6 +235,7 @@ export function StudentsWorkspace({ initialStudents, options }: { initialStudent
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <InfoMini label="Contact" value={student.email ? `${student.phone} · ${student.email}` : student.phone} />
+                  <InfoMini label="Branch" value={student.branch?.name ?? "Unassigned"} />
                   <InfoMini label="Program" value={`${humanize(student.programTrack)} · ${humanize(student.targetIntake)}`} />
                 </div>
                 <div className="mt-4" onClick={(event) => event.stopPropagation()}>
@@ -270,6 +282,8 @@ export function StudentsWorkspace({ initialStudents, options }: { initialStudent
                 key={mode === "create" ? "create-student" : selectedStudent?.id}
                 student={formStudent}
                 options={options}
+                branches={branches}
+                defaultBranchId={defaultBranchId}
                 onSubmit={saveStudent}
                 saving={saving}
                 submitLabel={mode === "create" ? "Create student" : "Save changes"}
@@ -337,7 +351,8 @@ function StudentModal({ children, onClose }: { children: React.ReactNode; onClos
 function StudentProfile({ student, onEdit }: { student: Student; options: CrmOptions; onEdit: () => void }) {
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-5">
+        <ProfileStat label="Branch" value={student.branch?.name ?? "Unassigned"} />
         <ProfileStat label="Program" value={humanize(student.programTrack)} />
         <ProfileStat label="Japanese level" value={humanize(student.japaneseLevel)} />
         <ProfileStat label="Target intake" value={humanize(student.targetIntake)} />
@@ -394,10 +409,11 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
   );
 }
 
-function StudentForm({ student, options, onSubmit, saving, submitLabel }: { student: Student; options: CrmOptions; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; saving: boolean; submitLabel: string }) {
+function StudentForm({ student, options, branches, defaultBranchId, onSubmit, saving, submitLabel }: { student: Student; options: CrmOptions; branches: BranchOption[]; defaultBranchId?: string; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; saving: boolean; submitLabel: string }) {
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
       <div className="grid gap-4 lg:grid-cols-3">
+        <SelectField label="Branch" name="branchId" options={branches.map((branch) => ({ value: branch.id, label: branch.name }))} defaultValue={student.branchId || defaultBranchId} />
         <Field label="Full name" name="fullName" defaultValue={student.fullName} required />
         <Field label="Phone" name="phone" defaultValue={student.phone} required />
         <Field label="Email" name="email" type="email" defaultValue={student.email ?? ""} />

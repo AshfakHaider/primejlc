@@ -31,6 +31,39 @@ export const leadStatusOptions = [
   { value: "LOST", label: "Lost" }
 ] as const;
 
+export const branches = [
+  {
+    id: "branch-dhaka",
+    name: "Dhaka",
+    address: "House# 68 (2nd Floor), Road# 12, Sector# 10, Uttara, Dhaka-1230",
+    phone: "01798562705",
+    managerName: "Prime Admin",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "branch-bogura",
+    name: "Bogura",
+    address: "Prime Japanese Language Centre, Bogura Branch",
+    phone: "01711001001",
+    managerName: "Arif Mahmud",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: "branch-jamalpur",
+    name: "Jamalpur",
+    address: "Prime Japanese Language Centre, Jamalpur Branch",
+    phone: "01711001002",
+    managerName: "Maliha Sultana",
+    status: "ACTIVE",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
 export const crmOptions = {
   programTrack: [
     { value: "LANGUAGE_PROGRAM", label: "Language Program" },
@@ -68,6 +101,8 @@ export const crmOptions = {
 export const leads = [
   {
     id: "lead-1",
+    branchId: branches[0].id,
+    branch: { id: branches[0].id, name: branches[0].name },
     name: "Arafat Rahman",
     city: "Uttara",
     phoneNumber: "01722000001",
@@ -80,6 +115,8 @@ export const leads = [
   },
   {
     id: "lead-2",
+    branchId: branches[0].id,
+    branch: { id: branches[0].id, name: branches[0].name },
     name: "Nishat Tasnim",
     city: "Mirpur",
     phoneNumber: "01833000002",
@@ -92,6 +129,8 @@ export const leads = [
   },
   {
     id: "lead-3",
+    branchId: branches[1].id,
+    branch: { id: branches[1].id, name: branches[1].name },
     name: "Fahim Ahmed",
     city: "Gazipur",
     phoneNumber: "01944000003",
@@ -104,6 +143,8 @@ export const leads = [
   },
   {
     id: "lead-4",
+    branchId: branches[0].id,
+    branch: { id: branches[0].id, name: branches[0].name },
     name: "Sanjida Islam",
     city: "Banani",
     phoneNumber: "01655000004",
@@ -116,6 +157,8 @@ export const leads = [
   },
   {
     id: "lead-5",
+    branchId: branches[2].id,
+    branch: { id: branches[2].id, name: branches[2].name },
     name: "Mahmudul Hasan",
     city: "Uttara",
     phoneNumber: "01766000005",
@@ -128,6 +171,8 @@ export const leads = [
   },
   {
     id: "lead-6",
+    branchId: branches[1].id,
+    branch: { id: branches[1].id, name: branches[1].name },
     name: "Tanha Akter",
     city: "Dhanmondi",
     phoneNumber: "01877000006",
@@ -143,6 +188,8 @@ export const leads = [
 export const students = [
   {
     id: "sample-1",
+    branchId: branches[0].id,
+    branch: { id: branches[0].id, name: branches[0].name },
     studentId: "PJLC-2026-001",
     fullName: "Rahim Uddin",
     phone: "01711000001",
@@ -162,6 +209,8 @@ export const students = [
   },
   {
     id: "sample-2",
+    branchId: branches[0].id,
+    branch: { id: branches[0].id, name: branches[0].name },
     studentId: "PJLC-2026-002",
     fullName: "Sadia Akter",
     phone: "01711000002",
@@ -181,6 +230,8 @@ export const students = [
   },
   {
     id: "sample-3",
+    branchId: branches[1].id,
+    branch: { id: branches[1].id, name: branches[1].name },
     studentId: "PJLC-2026-003",
     fullName: "Imran Hossain",
     phone: "01711000003",
@@ -200,6 +251,8 @@ export const students = [
   },
   {
     id: "sample-4",
+    branchId: branches[2].id,
+    branch: { id: branches[2].id, name: branches[2].name },
     studentId: "PJLC-2026-004",
     fullName: "Maliha Rahman",
     phone: "01711000004",
@@ -247,6 +300,8 @@ export const schools = [
 export const courses = [
   {
     id: "course-1",
+    branchId: branches[0].id,
+    branch: { id: branches[0].id, name: branches[0].name },
     name: "N5 Evening Batch - May 2026",
     teacherName: "Tanaka Sensei",
     classSchedule: "Sun, Tue, Thu - 7:00 PM",
@@ -302,6 +357,8 @@ export const courses = [
   },
   {
     id: "course-2",
+    branchId: branches[1].id,
+    branch: { id: branches[1].id, name: branches[1].name },
     name: "N4 Morning Batch - April 2026",
     teacherName: "Sakura Sensei",
     classSchedule: "Sat, Mon, Wed - 10:00 AM",
@@ -359,6 +416,8 @@ export const courses = [
 export const payments = [
   {
     id: "payment-1",
+    branchId: branches[0].id,
+    branch: { id: branches[0].id, name: branches[0].name },
     receiptNo: "MR-2026-0001",
     admissionFee: 25000,
     courseFee: 18000,
@@ -371,6 +430,8 @@ export const payments = [
   },
   {
     id: "payment-2",
+    branchId: branches[0].id,
+    branch: { id: branches[0].id, name: branches[0].name },
     receiptNo: "MR-2026-0002",
     admissionFee: 25000,
     courseFee: 20000,
@@ -384,9 +445,9 @@ export const payments = [
 ];
 
 export const expenses = [
-  { id: "expense-1", category: "OFFICE_RENT", title: "May office rent", amount: 55000, expenseDate: new Date("2026-05-02"), vendor: "Building owner" },
-  { id: "expense-2", category: "SENSEI_SALARY", title: "Tanaka Sensei salary advance", amount: 45000, expenseDate: new Date("2026-05-04"), vendor: "Tanaka Sensei" },
-  { id: "expense-3", category: "MARKETING_COST", title: "Facebook campaign", amount: 18000, expenseDate: new Date("2026-05-06"), vendor: "Meta Ads" }
+  { id: "expense-1", branchId: branches[0].id, branch: { id: branches[0].id, name: branches[0].name }, category: "OFFICE_RENT", title: "May office rent", amount: 55000, expenseDate: new Date("2026-05-02"), vendor: "Building owner" },
+  { id: "expense-2", branchId: branches[0].id, branch: { id: branches[0].id, name: branches[0].name }, category: "SENSEI_SALARY", title: "Tanaka Sensei salary advance", amount: 45000, expenseDate: new Date("2026-05-04"), vendor: "Tanaka Sensei" },
+  { id: "expense-3", branchId: branches[1].id, branch: { id: branches[1].id, name: branches[1].name }, category: "MARKETING_COST", title: "Facebook campaign", amount: 18000, expenseDate: new Date("2026-05-06"), vendor: "Meta Ads" }
 ];
 
 export const agency = {

@@ -13,9 +13,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/utils";
 
-type StudentOption = { id: string; fullName: string; studentId: string };
+type StudentOption = { id: string; fullName: string; studentId: string; branchId?: string | null };
+type BranchOption = { id: string; name: string };
 type Payment = {
   id: string;
+  branchId?: string | null;
+  branch?: { id: string; name: string } | null;
   receiptNo: string;
   admissionFee: number | string;
   courseFee: number | string;
@@ -46,12 +49,13 @@ const emptyPayment: Payment = {
 
 const defaultMethods = ["Cash", "Bank transfer", "bKash", "Nagad", "Card"];
 
-export function PaymentsWorkspace({ initialPayments, students }: { initialPayments: Payment[]; students: StudentOption[] }) {
+export function PaymentsWorkspace({ initialPayments, students, branches, defaultBranchId }: { initialPayments: Payment[]; students: StudentOption[]; branches: BranchOption[]; defaultBranchId?: string }) {
   const [payments, setPayments] = useState(initialPayments);
   const [mode, setMode] = useState<PaymentMode>("closed");
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [query, setQuery] = useState("");
   const [methodFilter, setMethodFilter] = useState("ALL");
+  const [branchFilter, setBranchFilter] = useState("ALL");
   const [saving, setSaving] = useState(false);
 
   const methods = useMemo(() => Array.from(new Set([...defaultMethods, ...payments.map((payment) => payment.method).filter(Boolean)])), [payments]);
@@ -60,15 +64,16 @@ export function PaymentsWorkspace({ initialPayments, students }: { initialPaymen
     const search = query.trim().toLowerCase();
     return payments.filter((payment) => {
       const matchesMethod = methodFilter === "ALL" || payment.method === methodFilter;
+      const matchesBranch = branchFilter === "ALL" || payment.branchId === branchFilter;
       const matchesSearch =
         !search ||
         [payment.receiptNo, payment.method, payment.student?.fullName, payment.student?.studentId]
           .join(" ")
           .toLowerCase()
           .includes(search);
-      return matchesMethod && matchesSearch;
+      return matchesMethod && matchesBranch && matchesSearch;
     });
-  }, [methodFilter, payments, query]);
+  }, [branchFilter, methodFilter, payments, query]);
 
   const stats = useMemo(() => {
     const paid = payments.reduce((sum, payment) => sum + Number(payment.paidAmount || 0), 0);
@@ -154,7 +159,7 @@ export function PaymentsWorkspace({ initialPayments, students }: { initialPaymen
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 lg:grid-cols-[1fr_220px]">
+          <div className="grid gap-3 lg:grid-cols-[1fr_220px_220px]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input className="pl-9" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search receipt, student, ID, method..." />
@@ -162,6 +167,10 @@ export function PaymentsWorkspace({ initialPayments, students }: { initialPaymen
             <Select value={methodFilter} onChange={(event) => setMethodFilter(event.target.value)} aria-label="Filter payment method">
               <option value="ALL">All payment methods</option>
               {methods.map((method) => <option key={method} value={method}>{method}</option>)}
+            </Select>
+            <Select value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} aria-label="Filter payments by branch">
+              <option value="ALL">All branches</option>
+              {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
             </Select>
           </div>
 
@@ -171,6 +180,7 @@ export function PaymentsWorkspace({ initialPayments, students }: { initialPaymen
                 <TableRow>
                   <TableHead>Receipt</TableHead>
                   <TableHead>Student</TableHead>
+                  <TableHead>Branch</TableHead>
                   <TableHead>Paid</TableHead>
                   <TableHead>Due</TableHead>
                   <TableHead>Method</TableHead>
@@ -189,6 +199,7 @@ export function PaymentsWorkspace({ initialPayments, students }: { initialPaymen
                       <div className="font-medium">{payment.student?.fullName}</div>
                       <div className="text-xs text-muted-foreground">{payment.student?.studentId}</div>
                     </TableCell>
+                    <TableCell><Badge variant="secondary">{payment.branch?.name ?? "Unassigned"}</Badge></TableCell>
                     <TableCell className="font-medium">{formatCurrency(payment.paidAmount)}</TableCell>
                     <TableCell><DueBadge value={payment.dueAmount} /></TableCell>
                     <TableCell><Badge variant="outline">{payment.method}</Badge></TableCell>
@@ -237,6 +248,7 @@ export function PaymentsWorkspace({ initialPayments, students }: { initialPaymen
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-3">
                   <InfoMini label="Paid" value={formatCurrency(payment.paidAmount)} />
+                  <InfoMini label="Branch" value={payment.branch?.name ?? "Unassigned"} />
                   <InfoMini label="Method" value={payment.method} />
                   <InfoMini label="Date" value={formatDate(payment.paymentDate)} />
                 </div>
@@ -263,7 +275,7 @@ export function PaymentsWorkspace({ initialPayments, students }: { initialPaymen
           {mode === "view" && selectedPayment ? (
             <PaymentReceipt payment={selectedPayment} onEdit={() => setMode("edit")} onDelete={() => deletePayment(selectedPayment.id)} />
           ) : (
-            <PaymentForm payment={formPayment} students={students} methods={methods} onSubmit={savePayment} saving={saving} submitLabel={mode === "create" ? "Generate receipt" : "Save payment"} />
+            <PaymentForm payment={formPayment} students={students} branches={branches} defaultBranchId={defaultBranchId} methods={methods} onSubmit={savePayment} saving={saving} submitLabel={mode === "create" ? "Generate receipt" : "Save payment"} />
           )}
         </FinanceModal>
       ) : null}
@@ -271,12 +283,18 @@ export function PaymentsWorkspace({ initialPayments, students }: { initialPaymen
   );
 }
 
-function PaymentForm({ payment, students, methods, onSubmit, saving, submitLabel }: { payment: Payment; students: StudentOption[]; methods: string[]; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; saving: boolean; submitLabel: string }) {
+function PaymentForm({ payment, students, branches, defaultBranchId, methods, onSubmit, saving, submitLabel }: { payment: Payment; students: StudentOption[]; branches: BranchOption[]; defaultBranchId?: string; methods: string[]; onSubmit: (event: React.FormEvent<HTMLFormElement>) => void; saving: boolean; submitLabel: string }) {
   const studentId = payment.student?.id || students[0]?.id || "";
 
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
       <div className="grid gap-4 lg:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="branchId">Branch</Label>
+          <Select id="branchId" name="branchId" defaultValue={payment.branchId || defaultBranchId}>
+            {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+          </Select>
+        </div>
         <div className="space-y-2 lg:col-span-2">
           <Label htmlFor="studentId">Student</Label>
           <Select id="studentId" name="studentId" defaultValue={studentId} required>
@@ -324,6 +342,7 @@ function PaymentReceipt({ payment, onEdit, onDelete }: { payment: Payment; onEdi
           <DueBadge value={payment.dueAmount} />
         </div>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <InfoBlock icon={ReceiptText} label="Branch" value={payment.branch?.name ?? "Unassigned"} />
           <InfoBlock icon={UserRound} label="Student" value={`${payment.student?.fullName ?? "Unknown"} · ${payment.student?.studentId ?? ""}`} />
           <InfoBlock icon={CreditCard} label="Method" value={payment.method} />
           <InfoBlock icon={CalendarDays} label="Payment date" value={formatDate(payment.paymentDate)} />
@@ -452,7 +471,7 @@ function paymentTotal(payment: Payment) {
 
 function formatDate(value?: Date | string) {
   if (!value) return "Not set";
-  return new Date(value).toLocaleDateString();
+  return new Date(value).toLocaleDateString("en-GB", { timeZone: "UTC" });
 }
 
 function dateInput(value?: Date | string) {

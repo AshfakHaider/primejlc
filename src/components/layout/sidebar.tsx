@@ -12,6 +12,7 @@ import {
   GraduationCap,
   Home,
   Landmark,
+  MapPinned,
   Menu,
   MessageSquareMore,
   Receipt,
@@ -26,6 +27,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/branches", label: "Branches", icon: MapPinned },
   { href: "/leads", label: "Leads", icon: MessageSquareMore },
   { href: "/students", label: "Students", icon: GraduationCap },
   { href: "/courses", label: "Courses", icon: BookOpenCheck },

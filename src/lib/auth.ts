@@ -8,7 +8,9 @@ export type SessionUser = {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "COUNSELOR" | "TEACHER" | "ACCOUNTANT" | "STAFF";
+  role: "SUPER_ADMIN" | "BRANCH_MANAGER" | "ADMIN" | "COUNSELOR" | "TEACHER" | "ACCOUNTANT" | "STAFF";
+  branchId?: string | null;
+  branchName?: string | null;
 };
 
 export async function signIn(email: string, password: string) {
@@ -17,13 +19,18 @@ export async function signIn(email: string, password: string) {
       id: "sample-admin",
       name: "Prime Admin",
       email,
-      role: "ADMIN"
+      role: "SUPER_ADMIN",
+      branchId: null,
+      branchName: null
     };
     await setSessionCookie(sessionUser);
     return sessionUser;
   }
 
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: { branch: { select: { id: true, name: true } } }
+  });
   if (!user || !user.isActive) return null;
 
   const isValid = await bcrypt.compare(password, user.passwordHash);
@@ -33,7 +40,9 @@ export async function signIn(email: string, password: string) {
     id: user.id,
     name: user.name,
     email: user.email,
-    role: user.role
+    role: user.role,
+    branchId: user.branchId,
+    branchName: user.branch?.name ?? null
   };
 
   await setSessionCookie(sessionUser);
@@ -71,7 +80,9 @@ export async function getSession(): Promise<SessionUser | null> {
       id: String(payload.id),
       name: String(payload.name),
       email: String(payload.email),
-      role: payload.role as SessionUser["role"]
+      role: payload.role as SessionUser["role"],
+      branchId: typeof payload.branchId === "string" ? payload.branchId : null,
+      branchName: typeof payload.branchName === "string" ? payload.branchName : null
     };
   } catch {
     return null;
@@ -79,5 +90,5 @@ export async function getSession(): Promise<SessionUser | null> {
 }
 
 export function canAccess(role: SessionUser["role"], allowed: SessionUser["role"][]) {
-  return role === "ADMIN" || allowed.includes(role);
+  return role === "SUPER_ADMIN" || role === "ADMIN" || allowed.includes(role);
 }

@@ -6,51 +6,132 @@ const prisma = new PrismaClient();
 async function main() {
   const passwordHash = await bcrypt.hash("Prime@12345", 12);
 
+  const dhaka = await prisma.branch.upsert({
+    where: { name: "Dhaka" },
+    update: {
+      address: "House# 68 (2nd Floor), Road# 12, Sector# 10, Uttara, Dhaka-1230",
+      phone: "01798562705",
+      managerName: "Prime Admin",
+      status: "ACTIVE"
+    },
+    create: {
+      name: "Dhaka",
+      address: "House# 68 (2nd Floor), Road# 12, Sector# 10, Uttara, Dhaka-1230",
+      phone: "01798562705",
+      managerName: "Prime Admin",
+      status: "ACTIVE"
+    }
+  });
+
+  const bogura = await prisma.branch.upsert({
+    where: { name: "Bogura" },
+    update: {
+      address: "Prime Japanese Language Centre, Bogura Branch",
+      phone: "01711001001",
+      managerName: "Arif Mahmud",
+      status: "ACTIVE"
+    },
+    create: {
+      name: "Bogura",
+      address: "Prime Japanese Language Centre, Bogura Branch",
+      phone: "01711001001",
+      managerName: "Arif Mahmud",
+      status: "ACTIVE"
+    }
+  });
+
+  const jamalpur = await prisma.branch.upsert({
+    where: { name: "Jamalpur" },
+    update: {
+      address: "Prime Japanese Language Centre, Jamalpur Branch",
+      phone: "01711001002",
+      managerName: "Maliha Sultana",
+      status: "ACTIVE"
+    },
+    create: {
+      name: "Jamalpur",
+      address: "Prime Japanese Language Centre, Jamalpur Branch",
+      phone: "01711001002",
+      managerName: "Maliha Sultana",
+      status: "ACTIVE"
+    }
+  });
+
   const admin = await prisma.user.upsert({
     where: { email: "admin@primejlc.com" },
-    update: {},
+    update: { role: UserRole.SUPER_ADMIN, branchId: dhaka.id },
     create: {
       name: "Prime Admin",
       email: "admin@primejlc.com",
       phone: "01798562705",
       passwordHash,
-      role: UserRole.ADMIN
+      role: UserRole.SUPER_ADMIN,
+      branchId: dhaka.id
     }
   });
 
   const counselor = await prisma.user.upsert({
     where: { email: "counselor@primejlc.com" },
-    update: {},
+    update: { branchId: dhaka.id },
     create: {
       name: "Nusrat Jahan",
       email: "counselor@primejlc.com",
       phone: "01811000001",
       passwordHash,
-      role: UserRole.COUNSELOR
+      role: UserRole.COUNSELOR,
+      branchId: dhaka.id
     }
   });
 
   const teacher = await prisma.user.upsert({
     where: { email: "sensei@primejlc.com" },
-    update: {},
+    update: { branchId: dhaka.id },
     create: {
       name: "Tanaka Sensei",
       email: "sensei@primejlc.com",
       phone: "01811000002",
       passwordHash,
-      role: UserRole.TEACHER
+      role: UserRole.TEACHER,
+      branchId: dhaka.id
     }
   });
 
   const accountant = await prisma.user.upsert({
     where: { email: "accounts@primejlc.com" },
-    update: {},
+    update: { branchId: dhaka.id },
     create: {
       name: "Mehedi Hasan",
       email: "accounts@primejlc.com",
       phone: "01811000003",
       passwordHash,
-      role: UserRole.ACCOUNTANT
+      role: UserRole.ACCOUNTANT,
+      branchId: dhaka.id
+    }
+  });
+
+  await prisma.user.upsert({
+    where: { email: "bogura.manager@primejlc.com" },
+    update: { branchId: bogura.id, role: UserRole.BRANCH_MANAGER },
+    create: {
+      name: "Arif Mahmud",
+      email: "bogura.manager@primejlc.com",
+      phone: "01711001001",
+      passwordHash,
+      role: UserRole.BRANCH_MANAGER,
+      branchId: bogura.id
+    }
+  });
+
+  await prisma.user.upsert({
+    where: { email: "jamalpur.manager@primejlc.com" },
+    update: { branchId: jamalpur.id, role: UserRole.BRANCH_MANAGER },
+    create: {
+      name: "Maliha Sultana",
+      email: "jamalpur.manager@primejlc.com",
+      phone: "01711001002",
+      passwordHash,
+      role: UserRole.BRANCH_MANAGER,
+      branchId: jamalpur.id
     }
   });
 
@@ -158,6 +239,7 @@ async function main() {
   await prisma.lead.createMany({
     data: [
       {
+        branchId: dhaka.id,
         name: "Arafat Rahman",
         city: "Uttara",
         phoneNumber: "01722000001",
@@ -169,6 +251,7 @@ async function main() {
         notes: "Asked about October intake and service charge."
       },
       {
+        branchId: dhaka.id,
         name: "Nishat Tasnim",
         city: "Mirpur",
         phoneNumber: "01833000002",
@@ -180,6 +263,7 @@ async function main() {
         notes: "Wants evening N5 batch schedule."
       },
       {
+        branchId: bogura.id,
         name: "Fahim Ahmed",
         city: "Gazipur",
         phoneNumber: "01944000003",
@@ -191,6 +275,7 @@ async function main() {
         notes: "Preparing for NAT N4."
       },
       {
+        branchId: jamalpur.id,
         name: "Mahmudul Hasan",
         city: "Uttara",
         phoneNumber: "01766000005",
@@ -202,6 +287,7 @@ async function main() {
         notes: "Documents discussion started."
       },
       {
+        branchId: bogura.id,
         name: "Tanha Akter",
         city: "Dhanmondi",
         phoneNumber: "01877000006",
@@ -227,6 +313,7 @@ async function main() {
   const students = await Promise.all([
     prisma.student.create({
       data: {
+        branchId: dhaka.id,
         studentId: "PJLC-2026-001",
         fullName: "Rahim Uddin",
         phone: "01711000001",
@@ -258,6 +345,7 @@ async function main() {
         },
         admission: {
           create: {
+            branchId: dhaka.id,
             currentStage: "COE_APPLIED",
             coeAppliedAt: new Date("2026-04-18"),
             notes: "Awaiting COE update from Tokyo partner."
@@ -267,6 +355,7 @@ async function main() {
     }),
     prisma.student.create({
       data: {
+        branchId: dhaka.id,
         studentId: "PJLC-2026-002",
         fullName: "Sadia Akter",
         phone: "01711000002",
@@ -298,6 +387,7 @@ async function main() {
         },
         admission: {
           create: {
+            branchId: dhaka.id,
             currentStage: "VISA_APPROVED",
             coeAppliedAt: new Date("2026-01-12"),
             coeIssuedAt: new Date("2026-03-05"),
@@ -310,6 +400,7 @@ async function main() {
     }),
     prisma.student.create({
       data: {
+        branchId: bogura.id,
         studentId: "PJLC-2026-003",
         fullName: "Imran Hossain",
         phone: "01711000003",
@@ -339,6 +430,7 @@ async function main() {
         },
         admission: {
           create: {
+            branchId: bogura.id,
             currentStage: "DOCUMENTS_PENDING",
             notes: "Family bank statement pending."
           }
@@ -347,6 +439,7 @@ async function main() {
     }),
     prisma.student.create({
       data: {
+        branchId: jamalpur.id,
         studentId: "PJLC-2026-004",
         fullName: "Maliha Rahman",
         phone: "01711000004",
@@ -378,6 +471,7 @@ async function main() {
         },
         admission: {
           create: {
+            branchId: jamalpur.id,
             currentStage: "INTERVIEW_SCHEDULED",
             interviewDate: new Date("2026-05-20")
           }
@@ -388,6 +482,7 @@ async function main() {
 
   const batch = await prisma.courseBatch.create({
     data: {
+      branchId: dhaka.id,
       name: "N5 Evening Batch - May 2026",
       teacherId: teacher.id,
       teacherName: "Tanaka Sensei",
@@ -407,6 +502,7 @@ async function main() {
 
   const n4Batch = await prisma.courseBatch.create({
     data: {
+      branchId: bogura.id,
       name: "N4 Morning Batch - April 2026",
       teacherId: teacher.id,
       teacherName: "Sakura Sensei",
@@ -497,6 +593,7 @@ async function main() {
   await prisma.payment.createMany({
     data: [
       {
+        branchId: dhaka.id,
         receiptNo: "MR-2026-0001",
         studentId: students[0].id,
         admissionFee: 25000,
@@ -509,6 +606,7 @@ async function main() {
         receivedById: accountant.id
       },
       {
+        branchId: dhaka.id,
         receiptNo: "MR-2026-0002",
         studentId: students[1].id,
         admissionFee: 25000,
@@ -521,6 +619,7 @@ async function main() {
         receivedById: accountant.id
       },
       {
+        branchId: jamalpur.id,
         receiptNo: "MR-2026-0003",
         studentId: students[3].id,
         admissionFee: 25000,
@@ -539,6 +638,7 @@ async function main() {
   await prisma.expense.createMany({
     data: [
       {
+        branchId: dhaka.id,
         category: "OFFICE_RENT",
         title: "May office rent",
         amount: 55000,
@@ -547,6 +647,7 @@ async function main() {
         recordedById: accountant.id
       },
       {
+        branchId: dhaka.id,
         category: "SENSEI_SALARY",
         title: "Tanaka Sensei salary advance",
         amount: 45000,
@@ -555,6 +656,7 @@ async function main() {
         recordedById: accountant.id
       },
       {
+        branchId: bogura.id,
         category: "MARKETING_COST",
         title: "Facebook campaign",
         amount: 18000,
