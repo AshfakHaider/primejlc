@@ -4,6 +4,15 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
+  const databaseUrl = process.env.DATABASE_URL ?? "";
+  const isProtectedDatabase = databaseUrl.includes("neon.tech") || process.env.NODE_ENV === "production";
+
+  if (isProtectedDatabase && process.env.ALLOW_PRODUCTION_SEED !== "true") {
+    console.log("Protected database detected. Seed skipped to avoid overwriting live CRM records.");
+    console.log("Set ALLOW_PRODUCTION_SEED=true only when you intentionally want to reset sample data.");
+    return;
+  }
+
   const passwordHash = await bcrypt.hash("Prime@12345", 12);
 
   const dhaka = await prisma.branch.upsert({

@@ -21,6 +21,7 @@ export function LoginForm() {
     const formData = new FormData(event.currentTarget);
     const response = await fetch("/api/auth/login", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: formData.get("email"),
         password: formData.get("password")
@@ -45,7 +46,7 @@ export function LoginForm() {
         <CardDescription>Use the seeded admin account or any staff account.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4" onSubmit={onSubmit}>
+        <form className="space-y-4" action="/api/auth/login" method="post" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" name="email" type="email" defaultValue="admin@primejlc.com" required />
@@ -55,7 +56,7 @@ export function LoginForm() {
             <Input id="password" name="password" type="password" defaultValue="Prime@12345" required />
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
-          <Button className="w-full" disabled={loading}>
+          <Button className="w-full" type="submit" disabled={loading}>
             <LogIn className="h-4 w-4" />
             {loading ? "Signing in..." : "Sign in"}
           </Button>
