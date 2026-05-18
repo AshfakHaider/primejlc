@@ -17,12 +17,12 @@ import {
   MessageSquareMore,
   Receipt,
   Settings,
-  ShieldCheck,
   Users,
   WalletCards,
   X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/layout/brand-logo";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -47,13 +47,9 @@ export function Sidebar() {
   return (
     <aside className="hidden border-r bg-card/80 backdrop-blur lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
       <div className="flex h-20 items-center gap-3 border-b px-6">
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-          <ShieldCheck className="h-5 w-5" />
-        </div>
-        <div>
-          <p className="font-semibold leading-tight">Prime Japanese</p>
-          <p className="text-xs text-muted-foreground">Agency CRM</p>
-        </div>
+        <Link href="/dashboard" className="rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <BrandLogo />
+        </Link>
       </div>
       <nav className="flex-1 space-y-1 overflow-y-auto p-4">
         {navItems.map((item) => {
@@ -119,15 +115,7 @@ export function MobileSidebar() {
               <button className="absolute inset-0 z-0 bg-background/80 backdrop-blur-sm" aria-label="Close navigation menu" onClick={() => setOpen(false)} />
               <aside className="relative z-10 flex h-dvh w-[86vw] max-w-[340px] flex-col border-r bg-card shadow-2xl">
                 <div className="flex h-20 shrink-0 items-center justify-between gap-3 border-b px-4">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                      <ShieldCheck className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold leading-tight">Prime Japanese</p>
-                      <p className="text-xs text-muted-foreground">Agency CRM</p>
-                    </div>
-                  </div>
+                  <BrandLogo compact />
                   <Button variant="ghost" size="icon" onClick={() => setOpen(false)} aria-label="Close navigation menu">
                     <X className="h-5 w-5" />
                   </Button>

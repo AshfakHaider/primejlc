@@ -51,10 +51,25 @@ const emptyStudent: Student = {
   applicationStatus: "LEAD"
 };
 
-export function StudentsWorkspace({ initialStudents, options, branches, defaultBranchId }: { initialStudents: Student[]; options: CrmOptions; branches: BranchOption[]; defaultBranchId?: string }) {
+export function StudentsWorkspace({
+  initialStudents,
+  options,
+  branches,
+  defaultBranchId,
+  initialStatusFilter = "ALL",
+  initialProgramFilter = "ALL"
+}: {
+  initialStudents: Student[];
+  options: CrmOptions;
+  branches: BranchOption[];
+  defaultBranchId?: string;
+  initialStatusFilter?: string;
+  initialProgramFilter?: string;
+}) {
   const [students, setStudents] = useState(initialStudents);
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState("ALL");
+  const [filter, setFilter] = useState(initialStatusFilter);
+  const [programFilter, setProgramFilter] = useState(initialProgramFilter);
   const [branchFilter, setBranchFilter] = useState("ALL");
   const [mode, setMode] = useState<"closed" | "create" | "view" | "edit">("closed");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(initialStudents[0] ?? null);
@@ -68,10 +83,11 @@ export function StudentsWorkspace({ initialStudents, options, branches, defaultB
         .toLowerCase()
         .includes(query.toLowerCase());
       const matchesFilter = filter === "ALL" || student.applicationStatus === filter;
+      const matchesProgram = programFilter === "ALL" || student.programTrack === programFilter;
       const matchesBranch = branchFilter === "ALL" || student.branchId === branchFilter;
-      return matchesQuery && matchesFilter && matchesBranch;
+      return matchesQuery && matchesFilter && matchesProgram && matchesBranch;
     });
-  }, [branchFilter, students, query, filter]);
+  }, [branchFilter, students, query, filter, programFilter]);
 
   async function saveStudent(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -135,7 +151,7 @@ export function StudentsWorkspace({ initialStudents, options, branches, defaultB
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_220px]">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(18rem,1fr)_minmax(12rem,15rem)_minmax(12rem,15rem)_minmax(12rem,15rem)]">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input className="pl-9" placeholder="Search by name, ID, phone, passport..." value={query} onChange={(event) => setQuery(event.target.value)} />
@@ -146,6 +162,12 @@ export function StudentsWorkspace({ initialStudents, options, branches, defaultB
                 <option key={status.value} value={status.value}>{status.label}</option>
               ))}
             </Select>
+            <Select value={programFilter} onChange={(event) => setProgramFilter(event.target.value)} aria-label="Filter students by program">
+              <option value="ALL">All programs</option>
+              {(options.programTrack ?? []).map((program) => (
+                <option key={program.value} value={program.value}>{program.label}</option>
+              ))}
+            </Select>
             <Select value={branchFilter} onChange={(event) => setBranchFilter(event.target.value)} aria-label="Filter students by branch">
               <option value="ALL">All branches</option>
               {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
@@ -153,15 +175,15 @@ export function StudentsWorkspace({ initialStudents, options, branches, defaultB
           </div>
 
           <div className="hidden overflow-x-auto rounded-lg border lg:block">
-            <Table>
+            <Table className="min-w-[1120px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Branch</TableHead>
-                  <TableHead>Program</TableHead>
-                  <TableHead>Intake</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="min-w-[260px]">Student</TableHead>
+                  <TableHead className="min-w-[220px]">Contact</TableHead>
+                  <TableHead className="min-w-[140px]">Branch</TableHead>
+                  <TableHead className="min-w-[180px]">Program</TableHead>
+                  <TableHead className="min-w-[130px]">Intake</TableHead>
+                  <TableHead className="min-w-[250px]">Status</TableHead>
                   <TableHead className="w-28">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -172,7 +194,7 @@ export function StudentsWorkspace({ initialStudents, options, branches, defaultB
                     className={selectedStudent?.id === student.id ? "cursor-pointer bg-muted/45" : "cursor-pointer"}
                     onClick={() => { setSelectedStudent(student); setMode("view"); }}
                   >
-                    <TableCell>
+                    <TableCell className="align-middle">
                       <button className="text-left" onClick={() => { setSelectedStudent(student); setMode("view"); }}>
                         <div className="font-medium">{student.fullName}</div>
                         <div className="mt-2 flex flex-wrap gap-1.5">
@@ -182,14 +204,14 @@ export function StudentsWorkspace({ initialStudents, options, branches, defaultB
                         </div>
                       </button>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="align-middle">
                       <div>{student.phone}</div>
                       <div className="text-xs text-muted-foreground">{student.email || "No email"}</div>
                     </TableCell>
-                    <TableCell><Badge variant="secondary">{student.branch?.name ?? "Unassigned"}</Badge></TableCell>
-                    <TableCell><Badge variant="outline">{humanize(student.programTrack)}</Badge></TableCell>
-                    <TableCell><Badge variant="outline">{humanize(student.targetIntake)}</Badge></TableCell>
-                    <TableCell>
+                    <TableCell className="align-middle"><CompactBadge variant="secondary">{student.branch?.name ?? "Unassigned"}</CompactBadge></TableCell>
+                    <TableCell className="align-middle"><CompactBadge variant="outline">{labelFor(options.programTrack, student.programTrack)}</CompactBadge></TableCell>
+                    <TableCell className="align-middle"><CompactBadge variant="outline">{labelFor(options.targetIntake, student.targetIntake)}</CompactBadge></TableCell>
+                    <TableCell className="align-middle">
                       <StatusSelect value={student.applicationStatus} options={options.applicationStatus} onChange={(value) => updateStatus(student, value)} />
                     </TableCell>
                     <TableCell>
@@ -236,7 +258,7 @@ export function StudentsWorkspace({ initialStudents, options, branches, defaultB
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <InfoMini label="Contact" value={student.email ? `${student.phone} · ${student.email}` : student.phone} />
                   <InfoMini label="Branch" value={student.branch?.name ?? "Unassigned"} />
-                  <InfoMini label="Program" value={`${humanize(student.programTrack)} · ${humanize(student.targetIntake)}`} />
+                  <InfoMini label="Program" value={`${labelFor(options.programTrack, student.programTrack)} · ${labelFor(options.targetIntake, student.targetIntake)}`} />
                 </div>
                 <div className="mt-4" onClick={(event) => event.stopPropagation()}>
                   <StatusSelect value={student.applicationStatus} options={options.applicationStatus} onChange={(value) => updateStatus(student, value)} fullWidth />
@@ -305,6 +327,18 @@ function CountPill({ value, label }: { value: number; label: string }) {
   );
 }
 
+function labelFor(options: Option[] = [], value: string) {
+  return options.find((option) => option.value === value)?.label ?? humanize(value);
+}
+
+function CompactBadge({ children, variant = "outline" }: { children: React.ReactNode; variant?: "secondary" | "outline" }) {
+  return (
+    <Badge className="max-w-full whitespace-nowrap px-3 py-1 leading-none" variant={variant}>
+      <span className="min-w-0 truncate">{children}</span>
+    </Badge>
+  );
+}
+
 function TagChip({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex max-w-full items-center rounded-full border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
@@ -316,7 +350,7 @@ function TagChip({ children }: { children: React.ReactNode }) {
 function StatusSelect({ value, options = [], onChange, fullWidth = false }: { value: string; options?: Option[]; onChange: (value: string) => void; fullWidth?: boolean }) {
   return (
     <Select
-      className={`${fullWidth ? "w-full" : "w-full max-w-[13rem]"} h-9 rounded-full border-primary/20 bg-primary/5 px-4 text-sm font-semibold text-foreground`}
+      className={`${fullWidth ? "w-full" : "w-full min-w-[14.5rem]"} h-10 rounded-full border-primary/20 bg-primary/5 px-4 pr-9 text-sm font-semibold text-foreground`}
       value={value}
       onClick={(event) => event.stopPropagation()}
       onChange={(event) => onChange(event.target.value)}

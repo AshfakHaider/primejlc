@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Bell, LogOut, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
@@ -53,8 +54,22 @@ export function Topbar({
           </div>
         </div>
         <div className="min-w-0 flex-1 sm:hidden">
-          <p className="truncate text-sm font-semibold">Prime Japanese</p>
-          <p className="text-xs text-muted-foreground">Agency CRM</p>
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-20 shrink-0 overflow-hidden rounded-md border bg-white p-1 shadow-sm">
+              <Image
+                src="/brand/prime-logo-horizontal.png"
+                alt="Prime Japanese Language Centre logo"
+                width={160}
+                height={80}
+                className="h-full w-full object-contain"
+                priority
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">Agency CRM</p>
+              <p className="text-xs text-muted-foreground">Prime Japanese</p>
+            </div>
+          </div>
         </div>
         <div className="order-last w-full sm:order-none sm:w-[220px]">
           <Select

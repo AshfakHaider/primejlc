@@ -1,5 +1,6 @@
 import { LoginForm } from "@/components/forms/login-form";
 import { getSession } from "@/lib/auth";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 
 export default async function LoginPage() {
@@ -11,6 +12,16 @@ export default async function LoginPage() {
       <div className="premium-grid absolute inset-0" />
       <section className="relative mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-5 py-10 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="space-y-7">
+          <div className="w-fit rounded-2xl border bg-white p-3 shadow-sm">
+            <Image
+              src="/brand/prime-logo-full.jpeg"
+              alt="Prime Japanese Language Centre logo"
+              width={168}
+              height={168}
+              className="h-24 w-24 rounded-xl object-contain sm:h-32 sm:w-32"
+              priority
+            />
+          </div>
           <div className="inline-flex items-center rounded-full border bg-card px-3 py-1 text-sm text-muted-foreground shadow-sm">
             Bangladesh to Japan study visa operations
           </div>

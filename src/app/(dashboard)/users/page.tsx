@@ -1,3 +1,5 @@
+import { Users } from "lucide-react";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,10 +11,12 @@ export default async function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl">User Roles</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Role-based access for Super Admin, Branch Manager, Counselor, Teacher, Accountant, and Staff.</p>
-      </div>
+      <PageHeading
+        icon={Users}
+        eyebrow="Access"
+        title="User Roles"
+        description="Role-based access for Super Admin, Branch Manager, Counselor, Teacher, Accountant, and Staff."
+      />
       <Card>
         <CardHeader>
           <CardTitle>Team access</CardTitle>

@@ -1,3 +1,5 @@
+import { FileCheck2 } from "lucide-react";
+import { PageHeading } from "@/components/layout/page-heading";
 import { DocumentsWorkspace } from "@/components/tables/documents-workspace";
 import { getDocuments, getStudents } from "@/lib/queries";
 
@@ -16,12 +18,12 @@ export default async function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl">Document Checklist</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          See students with missing documents first, then open a student to review and mark received items.
-        </p>
-      </div>
+      <PageHeading
+        icon={FileCheck2}
+        eyebrow="Documents"
+        title="Document Checklist"
+        description="See students with missing documents first, then open a student to review and mark received items without a noisy list."
+      />
       <DocumentsWorkspace initialRows={rows} />
     </div>
   );

@@ -5,7 +5,11 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 
 export const metadata: Metadata = {
   title: "Prime Japanese Language Centre CRM",
-  description: "Agency management CRM for Japanese language and Japan study visa operations."
+  description: "Agency management CRM for Japanese language and Japan study visa operations.",
+  icons: {
+    icon: "/brand/prime-logo-full.jpeg",
+    apple: "/brand/prime-logo-full.jpeg"
+  }
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

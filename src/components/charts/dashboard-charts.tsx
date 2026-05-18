@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Area,
   AreaChart,
@@ -14,6 +15,8 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+import { ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, humanize } from "@/lib/utils";
 
@@ -30,10 +33,18 @@ export function DashboardCharts({
 }) {
   return (
     <div className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
-      <Card>
-        <CardHeader>
-          <CardTitle>Income vs Expenses</CardTitle>
-          <CardDescription>Monthly financial movement and profit visibility.</CardDescription>
+      <Card className="overflow-hidden">
+        <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle>Income vs Expenses</CardTitle>
+            <CardDescription>Monthly financial movement and profit visibility.</CardDescription>
+          </div>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/reports">
+              Report
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
         </CardHeader>
         <CardContent className="h-80">
           <ResponsiveContainer width="100%" height="100%">
@@ -48,7 +59,7 @@ export function DashboardCharts({
                   <stop offset="95%" stopColor="#e11d48" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.55} />
               <XAxis dataKey="month" tickLine={false} axisLine={false} />
               <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `${Number(value) / 1000}k`} />
               <Tooltip formatter={(value) => formatCurrency(Number(value))} />
@@ -59,7 +70,7 @@ export function DashboardCharts({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Intake Mix</CardTitle>
           <CardDescription>Student distribution by target intake.</CardDescription>
@@ -86,15 +97,23 @@ export function DashboardCharts({
         </CardContent>
       </Card>
 
-      <Card className="xl:col-span-2">
-        <CardHeader>
-          <CardTitle>Admission Pipeline</CardTitle>
-          <CardDescription>Lead to Japan flight readiness across the active student base.</CardDescription>
+      <Card className="overflow-hidden xl:col-span-2">
+        <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle>Admission Pipeline</CardTitle>
+            <CardDescription>Lead to Japan flight readiness across the active student base.</CardDescription>
+          </div>
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/admissions">
+              View
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </Button>
         </CardHeader>
         <CardContent className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={pipelineData} margin={{ bottom: 50 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.55} />
               <XAxis dataKey="stage" tickLine={false} axisLine={false} angle={-35} textAnchor="end" interval={0} tickFormatter={humanize} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
               <Tooltip labelFormatter={(label) => humanize(String(label))} />

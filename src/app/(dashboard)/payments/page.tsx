@@ -1,3 +1,5 @@
+import { Receipt } from "lucide-react";
+import { PageHeading } from "@/components/layout/page-heading";
 import { PaymentsWorkspace } from "@/components/tables/payments-workspace";
 import { allBranchesValue, getSelectedBranchCookie } from "@/lib/branch-access";
 import { getBranches, getPayments, getStudents } from "@/lib/queries";
@@ -7,10 +9,12 @@ export default async function PaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl">Payment Management</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Manage admission fee, course fee, service charge, due amount, paid amount, and receipts.</p>
-      </div>
+      <PageHeading
+        icon={Receipt}
+        eyebrow="Finance"
+        title="Payment Management"
+        description="Manage admission fee, course fee, service charge, due amount, paid amount, receipts, and branch-wise collections."
+      />
       <PaymentsWorkspace
         initialPayments={payments}
         students={students.map((student) => ({ id: student.id, fullName: student.fullName, studentId: student.studentId, branchId: student.branchId }))}

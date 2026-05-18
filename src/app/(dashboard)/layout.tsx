@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <Sidebar />
       <div className="min-w-0 lg:pl-72">
         <Topbar userName={session.name} role={session.role} branches={branches} selectedBranchId={selectedBranchId} canViewAllBranches={canSelectAll} />
-        <main className="min-h-[calc(100vh-4rem)] w-full max-w-full overflow-x-hidden p-4 sm:p-6 lg:pb-8">{children}</main>
+        <main className="animate-page-enter min-h-[calc(100vh-4rem)] w-full max-w-full overflow-x-hidden p-4 sm:p-6 lg:pb-8">{children}</main>
       </div>
     </div>
   );

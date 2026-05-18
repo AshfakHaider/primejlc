@@ -43,6 +43,24 @@ function toNumber(value: unknown) {
   return 0;
 }
 
+function toIso(value: unknown) {
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "string") return value;
+  return new Date().toISOString();
+}
+
+function isCurrentMonth(value: unknown) {
+  const date = new Date(toIso(value));
+  const now = new Date();
+  return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+}
+
+function getMonthKey(value: unknown) {
+  const date = new Date(toIso(value));
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+}
+
 function filterSampleByBranch<T extends { branchId?: string | null }>(items: T[], branchId: string | null) {
   return branchId ? items.filter((item) => item.branchId === branchId) : items;
 }
@@ -279,8 +297,8 @@ export async function getAgencySettings() {
   );
 }
 
-export async function getDashboardMetrics() {
-  const [students, payments, expenses, leads, admissions] = await Promise.all([getStudents(), getPayments(), getExpenses(), getLeads(), getAdmissions()]);
+export async function getDashboardMetrics(monthKey = getMonthKey(new Date())) {
+  const [students, payments, expenses, leads, admissions, documents] = await Promise.all([getStudents(), getPayments(), getExpenses(), getLeads(), getAdmissions(), getDocuments()]);
   const totalStudents = students.length;
   const activeStudents = students.filter((student) => student.isActive).length;
   const pendingDocuments = students.filter((student) => student.applicationStatus === "DOCUMENTS_PENDING").length;
@@ -288,26 +306,110 @@ export async function getDashboardMetrics() {
   const coeApplied = students.filter((student) => ["APPLIED", "ISSUED"].includes(student.coeStatus)).length;
   const visaApproved = students.filter((student) => student.visaStatus === "APPROVED").length;
   const visaApplied = students.filter((student) => ["APPLIED", "APPROVED"].includes(student.visaStatus)).length;
-  const monthlyIncome = payments.reduce((sum, payment) => sum + Number(payment.paidAmount), 0);
-  const monthlyExpenses = expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+  const monthlyIncome = payments.filter((payment) => getMonthKey(payment.paymentDate) === monthKey).reduce((sum, payment) => sum + Number(payment.paidAmount), 0);
+  const monthlyExpenses = expenses.filter((expense) => getMonthKey(expense.expenseDate) === monthKey).reduce((sum, expense) => sum + Number(expense.amount), 0);
+  const now = new Date();
 
   const intakeData = ["OCTOBER", "APRIL", "JUNE_JULY"].map((intake) => ({
     name: intake === "JUNE_JULY" ? "June/July" : intake[0] + intake.slice(1).toLowerCase(),
     students: students.filter((student) => student.targetIntake === intake).length
   }));
 
-  const financeData = [
-    { month: "Jan", income: 92000, expenses: 61000 },
-    { month: "Feb", income: 126000, expenses: 73000 },
-    { month: "Mar", income: 148000, expenses: 79000 },
-    { month: "Apr", income: 171000, expenses: 88000 },
-    { month: "May", income: monthlyIncome, expenses: monthlyExpenses }
-  ];
+  const selectedDate = parseMonthKey(monthKey);
+  const financeData = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - (5 - index), 1);
+    const key = getMonthKey(date);
+    return {
+      month: date.toLocaleDateString("en-BD", { month: "short" }),
+      income: payments.filter((payment) => getMonthKey(payment.paymentDate) === key).reduce((sum, payment) => sum + Number(payment.paidAmount), 0),
+      expenses: expenses.filter((expense) => getMonthKey(expense.expenseDate) === key).reduce((sum, expense) => sum + Number(expense.amount), 0)
+    };
+  });
 
   const pipelineData = sample.pipelineStages.map((stage) => ({
     stage,
     count: students.filter((student) => student.applicationStatus === stage).length
   }));
+
+  const documentFields = ["passport", "photo", "academicCertificates", "transcript", "bankSolvency", "bankStatement", "sponsorDocuments", "japaneseCertificate", "applicationForm", "sop"];
+  const missingDocumentStudents = documents
+    .map((document) => ({
+      id: document.student?.id ?? document.studentId,
+      title: document.student?.fullName ?? "Student document file",
+      detail: `${documentFields.filter((field) => !document[field]).length} missing documents`,
+      href: "/documents",
+      priority: "Review",
+      at: toIso(document.updatedAt)
+    }))
+    .filter((item) => !item.detail.startsWith("0 "))
+    .slice(0, 3);
+
+  const dueFollowUps = leads
+    .filter((lead) => lead.status === "FOLLOW_UP" || (lead.nextFollowUpDate && new Date(lead.nextFollowUpDate) <= now))
+    .slice(0, 3)
+    .map((lead) => ({
+      id: lead.id,
+      title: lead.name,
+      detail: lead.nextFollowUpDate ? `Follow up ${new Date(lead.nextFollowUpDate).toLocaleDateString("en-BD")}` : "Follow-up lead",
+      href: "/leads",
+      priority: lead.status
+    }));
+
+  const pendingAdmissions = admissions
+    .filter((admission) => ["DOCUMENTS_PENDING", "INTERVIEW_SCHEDULED", "COE_APPLIED", "VISA_APPLIED"].includes(admission.currentStage))
+    .slice(0, 3)
+    .map((admission) => ({
+      id: admission.id,
+      title: admission.student?.fullName ?? "Admission file",
+      detail: admission.currentStage,
+      href: "/admissions",
+      priority: "Pipeline"
+    }));
+
+  const recentActivity = [
+    ...leads.slice(0, 5).map((lead) => ({
+      id: lead.id,
+      type: "Lead",
+      title: lead.name,
+      detail: lead.interestedIn,
+      status: lead.status,
+      href: "/leads",
+      branch: lead.branch?.name ?? "All branches",
+      at: toIso(lead.updatedAt)
+    })),
+    ...students.slice(0, 5).map((student) => ({
+      id: student.id,
+      type: "Student",
+      title: student.fullName,
+      detail: student.studentId,
+      status: student.applicationStatus,
+      href: "/students",
+      branch: student.branch?.name ?? "Unassigned",
+      at: toIso(student.updatedAt)
+    })),
+    ...payments.slice(0, 4).map((payment) => ({
+      id: payment.id,
+      type: "Payment",
+      title: payment.student?.fullName ?? payment.receiptNo,
+      detail: formatMoneyShort(payment.paidAmount),
+      status: payment.dueAmount > 0 ? "DUE" : "PAID",
+      href: "/payments",
+      branch: payment.branch?.name ?? "Unassigned",
+      at: toIso(payment.paymentDate)
+    })),
+    ...admissions.slice(0, 4).map((admission) => ({
+      id: admission.id,
+      type: "Admission",
+      title: admission.student?.fullName ?? "Admission file",
+      detail: admission.currentStage,
+      status: admission.currentStage,
+      href: "/admissions",
+      branch: admission.branch?.name ?? "Unassigned",
+      at: toIso(admission.updatedAt)
+    }))
+  ]
+    .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())
+    .slice(0, 8);
 
   return {
     totalLeads: leads.length,
@@ -325,8 +427,20 @@ export async function getDashboardMetrics() {
     profitLoss: monthlyIncome - monthlyExpenses,
     intakeData,
     financeData,
-    pipelineData
+    pipelineData,
+    needsAttention: [...dueFollowUps, ...missingDocumentStudents, ...pendingAdmissions].slice(0, 6),
+    recentActivity
   };
+}
+
+function parseMonthKey(value: string) {
+  const [year, month] = value.split("-").map(Number);
+  const date = new Date(Number.isFinite(year) ? year : new Date().getFullYear(), Number.isFinite(month) ? month - 1 : new Date().getMonth(), 1);
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+function formatMoneyShort(value: unknown) {
+  return `BDT ${Number(value || 0).toLocaleString("en-BD", { maximumFractionDigits: 0 })}`;
 }
 
 export async function getBranchDetail(branchId: string) {

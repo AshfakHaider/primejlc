@@ -1,3 +1,5 @@
+import { BarChart3 } from "lucide-react";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -13,10 +15,12 @@ export default async function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl">Reports</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Student, intake, payment, expense, profit/loss, visa success, and COE success reports.</p>
-      </div>
+      <PageHeading
+        icon={BarChart3}
+        eyebrow="Reports"
+        title="Reports"
+        description="Student, intake, payment, expense, profit/loss, visa success, and COE success reports by global branch scope."
+      />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <ReportCard title="Branch filter" value={branchName} detail="Reports follow the global top-bar branch scope" />
         <ReportCard title="Student report" value={`${students.length} students`} detail={`${metrics.activeStudents} active records`} />
@@ -74,7 +78,7 @@ export default async function ReportsPage() {
 
 function ReportCard({ title, value, detail }: { title: string; value: string; detail: string }) {
   return (
-    <Card>
+    <Card className="hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-lg">
       <CardHeader>
         <CardDescription>{title}</CardDescription>
         <CardTitle className="mt-2 text-xl">{value}</CardTitle>

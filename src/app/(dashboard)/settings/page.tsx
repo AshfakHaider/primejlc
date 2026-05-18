@@ -1,5 +1,6 @@
 import type React from "react";
-import { Building2, Mail, MapPin, Phone } from "lucide-react";
+import { Building2, Mail, MapPin, Phone, Settings } from "lucide-react";
+import { PageHeading } from "@/components/layout/page-heading";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { OptionsManager } from "@/components/forms/options-manager";
 import { Input } from "@/components/ui/input";
@@ -11,10 +12,12 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl">Settings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Agency profile, contact information, and CRM defaults.</p>
-      </div>
+      <PageHeading
+        icon={Settings}
+        eyebrow="Admin"
+        title="Settings"
+        description="Agency profile, contact information, receipt identity, and dynamic CRM dropdown options."
+      />
       <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
         <Card>
           <CardHeader>

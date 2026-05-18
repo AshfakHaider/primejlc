@@ -1,3 +1,5 @@
+import { MessageSquareMore } from "lucide-react";
+import { PageHeading } from "@/components/layout/page-heading";
 import { LeadsWorkspace } from "@/components/tables/leads-workspace";
 import { allBranchesValue, getSelectedBranchCookie } from "@/lib/branch-access";
 import { getBranches, getLeads } from "@/lib/queries";
@@ -7,10 +9,12 @@ export default async function LeadsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-normal sm:text-3xl">Lead Management</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Track inquiries, follow-ups, interests, and conversion status in a simple CRM Kanban board.</p>
-      </div>
+      <PageHeading
+        icon={MessageSquareMore}
+        eyebrow="Pipeline"
+        title="Lead Management"
+        description="Track inquiries, follow-ups, interests, city filters, branch ownership, and conversion status in list or Kanban view."
+      />
       <LeadsWorkspace initialLeads={leads} branches={branches} defaultBranchId={selectedBranchId === allBranchesValue ? branches[0]?.id : selectedBranchId} />
     </div>
   );
