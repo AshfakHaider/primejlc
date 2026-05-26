@@ -11,7 +11,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       cityPrefecture: body.cityPrefecture,
       intakeAvailability: Array.isArray(body.intakeAvailability) ? body.intakeAvailability : [body.intakeAvailability],
       tuitionFee: typeof body.tuitionFee === "undefined" ? undefined : Number(body.tuitionFee),
+      applicationStartDate:
+        typeof body.applicationStartDate === "undefined" ? undefined : body.applicationStartDate ? new Date(body.applicationStartDate) : null,
       applicationDeadline: body.applicationDeadline ? new Date(body.applicationDeadline) : undefined,
+      minimumJapaneseLevel: body.minimumJapaneseLevel,
       contactEmail: body.contactEmail,
       partnerStatus: body.partnerStatus,
       notes: body.notes || null

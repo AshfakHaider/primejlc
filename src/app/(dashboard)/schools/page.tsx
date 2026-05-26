@@ -12,7 +12,7 @@ export default async function SchoolsPage() {
         icon={Landmark}
         eyebrow="Partners"
         title="School Management"
-        description="Manage partner school contacts, intakes, tuition fees, deadlines, status, and internal notes."
+        description="Manage partner school contacts, intakes, tuition fees, application dates, status, and internal notes."
       />
       <SchoolsWorkspace initialSchools={schools} options={options} />
     </div>

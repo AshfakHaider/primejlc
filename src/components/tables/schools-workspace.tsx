@@ -32,7 +32,9 @@ type School = {
   cityPrefecture: string;
   intakeAvailability: string[];
   tuitionFee: number | string;
+  applicationStartDate?: Date | string | null;
   applicationDeadline: Date | string;
+  minimumJapaneseLevel: string;
   contactEmail: string;
   partnerStatus: string;
   notes?: string | null;
@@ -48,7 +50,9 @@ const emptySchool: School = {
   cityPrefecture: "",
   intakeAvailability: ["OCTOBER"],
   tuitionFee: "",
+  applicationStartDate: "",
   applicationDeadline: "",
+  minimumJapaneseLevel: "N5",
   contactEmail: "",
   partnerStatus: "PROSPECT",
   notes: ""
@@ -68,7 +72,7 @@ export function SchoolsWorkspace({ initialSchools, options }: { initialSchools: 
       const matchesStatus = statusFilter === "ALL" || school.partnerStatus === statusFilter;
       const matchesSearch =
         !search ||
-        [school.name, school.cityPrefecture, school.contactEmail, school.partnerStatus, ...school.intakeAvailability]
+        [school.name, school.cityPrefecture, school.contactEmail, school.partnerStatus, school.minimumJapaneseLevel, ...school.intakeAvailability]
           .join(" ")
           .toLowerCase()
           .includes(search);
@@ -95,7 +99,9 @@ export function SchoolsWorkspace({ initialSchools, options }: { initialSchools: 
       intakeAvailability: formData.getAll("intakeAvailability").map(String),
       partnerStatus: String(formData.get("partnerStatus") ?? "PROSPECT"),
       tuitionFee: String(formData.get("tuitionFee") ?? "0"),
+      applicationStartDate: String(formData.get("applicationStartDate") ?? ""),
       applicationDeadline: String(formData.get("applicationDeadline") ?? ""),
+      minimumJapaneseLevel: String(formData.get("minimumJapaneseLevel") ?? "N5"),
       notes: String(formData.get("notes") ?? "")
     };
     const editing = mode === "edit" && selectedSchool?.id;
@@ -156,7 +162,7 @@ export function SchoolsWorkspace({ initialSchools, options }: { initialSchools: 
           <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
             <div>
               <CardTitle>School Directory</CardTitle>
-              <CardDescription>Track partner status, intake availability, deadlines, tuition, and admission contacts.</CardDescription>
+              <CardDescription>Track partner status, intake availability, application dates, tuition, and admission contacts.</CardDescription>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <CountPill value={filteredSchools.length} label={filteredSchools.length === 1 ? "record" : "records"} />
@@ -185,12 +191,14 @@ export function SchoolsWorkspace({ initialSchools, options }: { initialSchools: 
           </div>
 
           <div className="hidden overflow-x-auto rounded-lg border lg:block">
-            <Table>
+            <Table className="min-w-[1180px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>School</TableHead>
                   <TableHead>Intakes</TableHead>
                   <TableHead>Tuition</TableHead>
+                  <TableHead>Min level</TableHead>
+                  <TableHead>Start date</TableHead>
                   <TableHead>Deadline</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-28">Actions</TableHead>
@@ -214,6 +222,8 @@ export function SchoolsWorkspace({ initialSchools, options }: { initialSchools: 
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{formatCurrency(school.tuitionFee)}</TableCell>
+                    <TableCell><Badge variant="outline">{levelLabel(options, school.minimumJapaneseLevel)}</Badge></TableCell>
+                    <TableCell>{formatDate(school.applicationStartDate)}</TableCell>
                     <TableCell>{formatDate(school.applicationDeadline)}</TableCell>
                     <TableCell><StatusBadge status={school.partnerStatus} /></TableCell>
                     <TableCell>
@@ -261,8 +271,10 @@ export function SchoolsWorkspace({ initialSchools, options }: { initialSchools: 
                   </div>
                   <StatusBadge status={school.partnerStatus} />
                 </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
                   <InfoMini label="Tuition" value={formatCurrency(school.tuitionFee)} />
+                  <InfoMini label="Min level" value={levelLabel(options, school.minimumJapaneseLevel)} />
+                  <InfoMini label="Start date" value={formatDate(school.applicationStartDate)} />
                   <InfoMini label="Deadline" value={formatDate(school.applicationDeadline)} />
                   <InfoMini label="Intakes" value={`${school.intakeAvailability.length} open`} />
                 </div>
@@ -285,12 +297,12 @@ export function SchoolsWorkspace({ initialSchools, options }: { initialSchools: 
       {mode !== "closed" ? (
         <SchoolModal
           title={mode === "create" ? "Add partner school" : mode === "edit" ? `Edit ${formSchool.name}` : selectedSchool?.name ?? "School profile"}
-          description={mode === "view" ? "School profile, intake readiness, admission deadline, and contact details." : "Keep school partner data accurate for counseling and admissions."}
+          description={mode === "view" ? "School profile, intake readiness, application dates, and contact details." : "Keep school partner data accurate for counseling and admissions."}
           onClose={() => setMode("closed")}
           wide={mode === "view"}
         >
           {mode === "view" && selectedSchool ? (
-            <SchoolProfile school={selectedSchool} onEdit={() => setMode("edit")} onDelete={() => deleteSchool(selectedSchool.id)} />
+            <SchoolProfile school={selectedSchool} options={options} onEdit={() => setMode("edit")} onDelete={() => deleteSchool(selectedSchool.id)} />
           ) : (
             <SchoolForm school={formSchool} options={options} onSubmit={saveSchool} saving={saving} submitLabel={mode === "create" ? "Create school" : "Save school"} />
           )}
@@ -338,12 +350,14 @@ function SchoolModal({ title, description, children, onClose, wide = false }: { 
   );
 }
 
-function SchoolProfile({ school, onEdit, onDelete }: { school: School; onEdit: () => void; onDelete: () => void }) {
+function SchoolProfile({ school, options, onEdit, onDelete }: { school: School; options: CrmOptions; onEdit: () => void; onDelete: () => void }) {
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-4">
         <ProfileStat label="Partner status" value={humanize(school.partnerStatus)} />
         <ProfileStat label="Tuition fee" value={formatCurrency(school.tuitionFee)} />
+        <ProfileStat label="Min level" value={levelLabel(options, school.minimumJapaneseLevel)} />
+        <ProfileStat label="Start date" value={formatDate(school.applicationStartDate)} />
         <ProfileStat label="Deadline" value={formatDate(school.applicationDeadline)} />
       </div>
       <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
@@ -356,6 +370,8 @@ function SchoolProfile({ school, onEdit, onDelete }: { school: School; onEdit: (
             <InfoBlock icon={MapPin} label="City / prefecture" value={school.cityPrefecture} />
             <InfoBlock icon={Mail} label="Admission contact" value={school.contactEmail} />
             <InfoBlock icon={BadgeDollarSign} label="Tuition" value={formatCurrency(school.tuitionFee)} />
+            <InfoBlock icon={CheckCircle2} label="Minimum Japanese level" value={levelLabel(options, school.minimumJapaneseLevel)} />
+            <InfoBlock icon={CalendarClock} label="Application start date" value={formatDate(school.applicationStartDate)} />
             <InfoBlock icon={CalendarClock} label="Application deadline" value={formatDate(school.applicationDeadline)} />
           </div>
         </div>
@@ -390,15 +406,17 @@ function SchoolForm({ school, options, onSubmit, saving, submitLabel }: { school
 
   return (
     <form className="grid gap-4" onSubmit={onSubmit}>
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-4">
         <Field label="School name" name="name" defaultValue={school.name} required />
         <Field label="City / prefecture" name="cityPrefecture" defaultValue={school.cityPrefecture} required />
         <Field label="Contact email" name="contactEmail" type="email" defaultValue={school.contactEmail} required />
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-5">
         <SelectField label="Partner status" name="partnerStatus" options={options.partnerStatus} defaultValue={school.partnerStatus} />
+        <SelectField label="Minimum Japanese level" name="minimumJapaneseLevel" options={options.japaneseLevel} defaultValue={school.minimumJapaneseLevel} />
         <Field label="Tuition fee" name="tuitionFee" type="number" defaultValue={String(school.tuitionFee)} required />
-        <Field label="Deadline" name="applicationDeadline" type="date" defaultValue={dateInput(school.applicationDeadline)} required />
+        <Field label="Application start date" name="applicationStartDate" type="date" defaultValue={dateInput(school.applicationStartDate)} />
+        <Field label="Application deadline" name="applicationDeadline" type="date" defaultValue={dateInput(school.applicationDeadline)} required />
       </div>
       <div className="space-y-2">
         <Label>Intake availability</Label>
@@ -440,6 +458,10 @@ function CountPill({ value, label }: { value: number; label: string }) {
 function StatusBadge({ status }: { status: string }) {
   const variant = status === "ACTIVE" ? "success" : status === "PAUSED" ? "warning" : "outline";
   return <Badge variant={variant}>{humanize(status)}</Badge>;
+}
+
+function levelLabel(options: CrmOptions, value: string) {
+  return options.japaneseLevel?.find((option) => option.value === value)?.label ?? humanize(value);
 }
 
 function TagChip({ children, icon: Icon }: { children: React.ReactNode; icon?: React.ElementType }) {
@@ -501,12 +523,12 @@ function SelectField({ label, name, options = [], defaultValue }: { label: strin
   );
 }
 
-function formatDate(value?: Date | string) {
+function formatDate(value?: Date | string | null) {
   if (!value) return "Not set";
   return new Date(value).toLocaleDateString("en-GB", { timeZone: "UTC" });
 }
 
-function dateInput(value?: Date | string) {
+function dateInput(value?: Date | string | null) {
   if (!value) return "";
   return new Date(value).toISOString().slice(0, 10);
 }

@@ -104,13 +104,19 @@ export async function getSchools() {
         cityPrefecture: school.cityPrefecture,
         intakeAvailability: school.intakeAvailability,
         tuitionFee: toNumber(school.tuitionFee),
+        applicationStartDate: school.applicationStartDate?.toISOString() ?? null,
         applicationDeadline: school.applicationDeadline.toISOString(),
+        minimumJapaneseLevel: school.minimumJapaneseLevel,
         contactEmail: school.contactEmail,
         partnerStatus: school.partnerStatus,
         notes: school.notes
       }));
     },
-    sample.schools.map((school) => ({ ...school, applicationDeadline: school.applicationDeadline.toISOString() }))
+    sample.schools.map((school) => ({
+      ...school,
+      applicationStartDate: school.applicationStartDate?.toISOString() ?? null,
+      applicationDeadline: school.applicationDeadline.toISOString()
+    }))
   );
 }
 

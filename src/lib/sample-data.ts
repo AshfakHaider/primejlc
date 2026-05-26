@@ -279,7 +279,9 @@ export const schools = [
     cityPrefecture: "Tokyo",
     intakeAvailability: ["OCTOBER", "APRIL"],
     tuitionFee: 820000,
+    applicationStartDate: new Date("2026-04-01"),
     applicationDeadline: new Date("2026-07-15"),
+    minimumJapaneseLevel: "N5",
     contactEmail: "admission@tija.jp",
     partnerStatus: "ACTIVE",
     notes: "Strong placement history for N5-N4 students."
@@ -290,7 +292,9 @@ export const schools = [
     cityPrefecture: "Kobe, Hyogo",
     intakeAvailability: ["APRIL", "JUNE_JULY"],
     tuitionFee: 760000,
+    applicationStartDate: new Date("2025-11-01"),
     applicationDeadline: new Date("2026-02-10"),
+    minimumJapaneseLevel: "N4",
     contactEmail: "partner@kobesakura.jp",
     partnerStatus: "ACTIVE",
     notes: "Responsive interview team."

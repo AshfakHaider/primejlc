@@ -14,7 +14,9 @@ export async function POST(request: Request) {
       cityPrefecture: body.cityPrefecture,
       intakeAvailability: Array.isArray(body.intakeAvailability) ? body.intakeAvailability : [body.intakeAvailability],
       tuitionFee: Number(body.tuitionFee || 0),
+      applicationStartDate: body.applicationStartDate ? new Date(body.applicationStartDate) : null,
       applicationDeadline: new Date(body.applicationDeadline),
+      minimumJapaneseLevel: body.minimumJapaneseLevel || "N5",
       contactEmail: body.contactEmail,
       partnerStatus: body.partnerStatus,
       notes: body.notes || null

@@ -216,7 +216,9 @@ async function main() {
         cityPrefecture: "Tokyo",
         intakeAvailability: ["OCTOBER", "APRIL"],
         tuitionFee: 820000,
+        applicationStartDate: new Date("2026-04-01"),
         applicationDeadline: new Date("2026-07-15"),
+        minimumJapaneseLevel: "N5",
         contactEmail: "admission@tija.jp",
         partnerStatus: "ACTIVE",
         notes: "Strong placement history for N5-N4 students."
@@ -226,7 +228,9 @@ async function main() {
         cityPrefecture: "Kobe, Hyogo",
         intakeAvailability: ["APRIL", "JUNE_JULY"],
         tuitionFee: 760000,
+        applicationStartDate: new Date("2025-11-01"),
         applicationDeadline: new Date("2026-02-10"),
+        minimumJapaneseLevel: "N4",
         contactEmail: "partner@kobesakura.jp",
         partnerStatus: "ACTIVE",
         notes: "Responsive interview team."
@@ -236,7 +240,9 @@ async function main() {
         cityPrefecture: "Fukuoka",
         intakeAvailability: ["OCTOBER"],
         tuitionFee: 690000,
+        applicationStartDate: new Date("2026-03-15"),
         applicationDeadline: new Date("2026-06-20"),
+        minimumJapaneseLevel: "N5",
         contactEmail: "intl@fni.jp",
         partnerStatus: "PROSPECT",
         notes: "Good cost profile for budget-sensitive families."
