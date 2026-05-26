@@ -190,17 +190,17 @@ export function SchoolsWorkspace({ initialSchools, options }: { initialSchools: 
             </Select>
           </div>
 
-          <div className="hidden overflow-x-auto rounded-lg border lg:block">
-            <Table className="min-w-[1180px]">
+          <div className="hidden overflow-x-auto rounded-lg border xl:block">
+            <Table className="min-w-[1120px]">
               <TableHeader>
                 <TableRow>
-                  <TableHead>School</TableHead>
-                  <TableHead>Intakes</TableHead>
-                  <TableHead>Tuition</TableHead>
-                  <TableHead>Min level</TableHead>
-                  <TableHead>Start date</TableHead>
-                  <TableHead>Deadline</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="min-w-[280px]">School</TableHead>
+                  <TableHead className="min-w-[190px]">Intakes</TableHead>
+                  <TableHead className="min-w-[130px]">Tuition</TableHead>
+                  <TableHead className="min-w-[110px]">Min level</TableHead>
+                  <TableHead className="min-w-[130px]">Start date</TableHead>
+                  <TableHead className="min-w-[130px]">Deadline</TableHead>
+                  <TableHead className="min-w-[120px]">Status</TableHead>
                   <TableHead className="w-28">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -221,10 +221,10 @@ export function SchoolsWorkspace({ initialSchools, options }: { initialSchools: 
                         {school.intakeAvailability.map((intake) => <Badge key={intake} variant="outline">{humanize(intake)}</Badge>)}
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{formatCurrency(school.tuitionFee)}</TableCell>
+                    <TableCell className="whitespace-nowrap font-medium">{formatCurrency(school.tuitionFee)}</TableCell>
                     <TableCell><Badge variant="outline">{levelLabel(options, school.minimumJapaneseLevel)}</Badge></TableCell>
-                    <TableCell>{formatDate(school.applicationStartDate)}</TableCell>
-                    <TableCell>{formatDate(school.applicationDeadline)}</TableCell>
+                    <TableCell className="whitespace-nowrap">{formatDate(school.applicationStartDate)}</TableCell>
+                    <TableCell className="whitespace-nowrap">{formatDate(school.applicationDeadline)}</TableCell>
                     <TableCell><StatusBadge status={school.partnerStatus} /></TableCell>
                     <TableCell>
                       <div className="flex gap-1">
@@ -258,7 +258,7 @@ export function SchoolsWorkspace({ initialSchools, options }: { initialSchools: 
             </Table>
           </div>
 
-          <div className="grid gap-3 lg:hidden">
+          <div className="grid gap-3 xl:hidden">
             {filteredSchools.map((school) => (
               <button key={school.id} className="rounded-lg border bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/35" onClick={() => openProfile(school)}>
                 <div className="flex items-start justify-between gap-3">
@@ -331,7 +331,7 @@ function MetricCard({ icon: Icon, label, value, tone }: { icon: React.ElementTyp
 function SchoolModal({ title, description, children, onClose, wide = false }: { title: string; description: string; children: React.ReactNode; onClose: () => void; wide?: boolean }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true">
-      <div className={`max-h-[92vh] w-full overflow-hidden rounded-xl border bg-card shadow-2xl ${wide ? "max-w-5xl" : "max-w-3xl"}`}>
+      <div className={`max-h-[92vh] w-full overflow-hidden rounded-xl border bg-card shadow-2xl ${wide ? "max-w-5xl" : "max-w-4xl"}`}>
         <div className="flex items-start justify-between gap-4 border-b p-4 sm:p-5">
           <div className="min-w-0">
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-secondary/10 text-secondary">
@@ -353,14 +353,14 @@ function SchoolModal({ title, description, children, onClose, wide = false }: { 
 function SchoolProfile({ school, options, onEdit, onDelete }: { school: School; options: CrmOptions; onEdit: () => void; onDelete: () => void }) {
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <ProfileStat label="Partner status" value={humanize(school.partnerStatus)} />
         <ProfileStat label="Tuition fee" value={formatCurrency(school.tuitionFee)} />
         <ProfileStat label="Min level" value={levelLabel(options, school.minimumJapaneseLevel)} />
         <ProfileStat label="Start date" value={formatDate(school.applicationStartDate)} />
         <ProfileStat label="Deadline" value={formatDate(school.applicationDeadline)} />
       </div>
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-lg border p-4">
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={school.partnerStatus} />
@@ -405,16 +405,18 @@ function SchoolForm({ school, options, onSubmit, saving, submitLabel }: { school
   const selectedIntakes = new Set(school.intakeAvailability.length ? school.intakeAvailability : [intakeOptions[0]?.value ?? "OCTOBER"]);
 
   return (
-    <form className="grid gap-4" onSubmit={onSubmit}>
-      <div className="grid gap-4 lg:grid-cols-4">
+    <form className="grid gap-5" onSubmit={onSubmit}>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Field label="School name" name="name" defaultValue={school.name} required />
         <Field label="City / prefecture" name="cityPrefecture" defaultValue={school.cityPrefecture} required />
         <Field label="Contact email" name="contactEmail" type="email" defaultValue={school.contactEmail} required />
       </div>
-      <div className="grid gap-4 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <SelectField label="Partner status" name="partnerStatus" options={options.partnerStatus} defaultValue={school.partnerStatus} />
         <SelectField label="Minimum Japanese level" name="minimumJapaneseLevel" options={options.japaneseLevel} defaultValue={school.minimumJapaneseLevel} />
         <Field label="Tuition fee" name="tuitionFee" type="number" defaultValue={String(school.tuitionFee)} required />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
         <Field label="Application start date" name="applicationStartDate" type="date" defaultValue={dateInput(school.applicationStartDate)} />
         <Field label="Application deadline" name="applicationDeadline" type="date" defaultValue={dateInput(school.applicationDeadline)} required />
       </div>
