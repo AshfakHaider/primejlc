@@ -2,7 +2,6 @@
 
 import type React from "react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { LockKeyhole, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
-  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -19,21 +17,33 @@ export function LoginForm() {
     setLoading(true);
     setError("");
     const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: formData.get("email"),
-        password: formData.get("password")
-      })
-    });
-    setLoading(false);
-    if (!response.ok) {
-      setError("Invalid email or password.");
-      return;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 15000);
+
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          email: formData.get("email"),
+          password: formData.get("password")
+        })
+      });
+
+      if (!response.ok) {
+        setError("Invalid email or password.");
+        setLoading(false);
+        return;
+      }
+
+      window.location.assign("/dashboard");
+    } catch {
+      setError("Sign in took too long. Please refresh and try again.");
+      setLoading(false);
+    } finally {
+      window.clearTimeout(timeout);
     }
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (
