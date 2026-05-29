@@ -330,21 +330,25 @@ function MetricCard({ icon: Icon, label, value, tone }: { icon: React.ElementTyp
 
 function SchoolModal({ title, description, children, onClose, wide = false }: { title: string; description: string; children: React.ReactNode; onClose: () => void; wide?: boolean }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true">
-      <div className={`max-h-[92vh] w-full overflow-hidden rounded-xl border bg-card shadow-2xl ${wide ? "max-w-5xl" : "max-w-4xl"}`}>
-        <div className="flex items-start justify-between gap-4 border-b p-4 sm:p-5">
-          <div className="min-w-0">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-secondary/10 text-secondary">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 p-0 backdrop-blur-sm sm:items-center sm:p-5" role="dialog" aria-modal="true">
+      <div
+        className={`flex h-[100dvh] w-full flex-col overflow-hidden border bg-card shadow-2xl sm:h-auto sm:max-h-[92dvh] sm:rounded-xl ${
+          wide ? "sm:max-w-5xl" : "sm:max-w-4xl"
+        }`}
+      >
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b p-4 sm:p-5">
+          <div className="min-w-0 flex-1">
+            <div className="mb-3 hidden h-10 w-10 items-center justify-center rounded-md bg-secondary/10 text-secondary sm:flex">
               <Landmark className="h-5 w-5" />
             </div>
-            <h2 className="truncate text-xl font-semibold">{title}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+            <h2 className="text-lg font-semibold leading-tight sm:text-xl">{title}</h2>
+            <p className="mt-1 text-sm leading-5 text-muted-foreground">{description}</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close school modal">
+          <Button className="shrink-0" variant="ghost" size="icon" onClick={onClose} aria-label="Close school modal">
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="max-h-[calc(92vh-132px)] overflow-y-auto p-4 sm:p-5">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">{children}</div>
       </div>
     </div>
   );
@@ -405,46 +409,65 @@ function SchoolForm({ school, options, onSubmit, saving, submitLabel }: { school
   const selectedIntakes = new Set(school.intakeAvailability.length ? school.intakeAvailability : [intakeOptions[0]?.value ?? "OCTOBER"]);
 
   return (
-    <form className="grid gap-5" onSubmit={onSubmit}>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <Field label="School name" name="name" defaultValue={school.name} required />
-        <Field label="City / prefecture" name="cityPrefecture" defaultValue={school.cityPrefecture} required />
-        <Field label="Contact email" name="contactEmail" type="email" defaultValue={school.contactEmail} required />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        <SelectField label="Partner status" name="partnerStatus" options={options.partnerStatus} defaultValue={school.partnerStatus} />
-        <SelectField label="Minimum Japanese level" name="minimumJapaneseLevel" options={options.japaneseLevel} defaultValue={school.minimumJapaneseLevel} />
-        <Field label="Tuition fee" name="tuitionFee" type="number" defaultValue={String(school.tuitionFee)} required />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
-        <Field label="Application start date" name="applicationStartDate" type="date" defaultValue={dateInput(school.applicationStartDate)} />
-        <Field label="Application deadline" name="applicationDeadline" type="date" defaultValue={dateInput(school.applicationDeadline)} required />
-      </div>
-      <div className="space-y-2">
-        <Label>Intake availability</Label>
-        <div className="grid gap-2 sm:grid-cols-3">
+    <form className="space-y-4" onSubmit={onSubmit}>
+      <FormSection title="School details">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <Field label="School name" name="name" defaultValue={school.name} required />
+          <Field label="City / prefecture" name="cityPrefecture" defaultValue={school.cityPrefecture} required />
+          <Field label="Contact email" name="contactEmail" type="email" defaultValue={school.contactEmail} required />
+        </div>
+      </FormSection>
+
+      <FormSection title="Application requirements">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <SelectField label="Partner status" name="partnerStatus" options={options.partnerStatus} defaultValue={school.partnerStatus} />
+          <SelectField label="Minimum Japanese level" name="minimumJapaneseLevel" options={options.japaneseLevel} defaultValue={school.minimumJapaneseLevel} />
+          <Field label="Tuition fee" name="tuitionFee" type="number" defaultValue={String(school.tuitionFee)} required />
+          <Field label="Application start date" name="applicationStartDate" type="date" defaultValue={dateInput(school.applicationStartDate)} />
+          <Field label="Application deadline" name="applicationDeadline" type="date" defaultValue={dateInput(school.applicationDeadline)} required />
+        </div>
+      </FormSection>
+
+      <FormSection title="Available intakes">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {intakeOptions.map((option) => (
-            <label key={option.value} className="flex items-center gap-2 rounded-md border bg-muted/25 px-3 py-2 text-sm">
+            <label key={option.value} className="flex min-h-11 items-center gap-2 rounded-md border bg-muted/25 px-3 py-2 text-sm">
               <input
-                className="h-4 w-4 accent-primary"
+                className="h-4 w-4 shrink-0 accent-primary"
                 type="checkbox"
                 name="intakeAvailability"
                 value={option.value}
                 defaultChecked={selectedIntakes.has(option.value)}
               />
-              <span>{option.label}</span>
+              <span className="min-w-0 truncate">{option.label}</span>
             </label>
           ))}
         </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea id="notes" name="notes" defaultValue={school.notes ?? ""} placeholder="Admission requirements, interview style, commission terms, or counselor notes." />
-      </div>
-      <div className="flex justify-end">
-        <Button disabled={saving}>{saving ? "Saving..." : submitLabel}</Button>
+      </FormSection>
+
+      <FormSection title="Internal notes">
+        <Textarea
+          id="notes"
+          name="notes"
+          className="min-h-28"
+          defaultValue={school.notes ?? ""}
+          placeholder="Admission requirements, interview style, commission terms, or counselor notes."
+        />
+      </FormSection>
+
+      <div className="sticky bottom-0 flex justify-end border-t bg-card/95 pt-3 backdrop-blur">
+        <Button className="w-full sm:w-auto" disabled={saving}>{saving ? "Saving..." : submitLabel}</Button>
       </div>
     </form>
+  );
+}
+
+function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-lg border bg-muted/15 p-3 sm:p-4">
+      <h3 className="mb-3 text-sm font-semibold">{title}</h3>
+      {children}
+    </section>
   );
 }
 
@@ -507,7 +530,7 @@ function InfoBlock({ icon: Icon, label, value }: { icon: React.ElementType; labe
 
 function Field({ label, name, type = "text", defaultValue, required }: { label: string; name: string; type?: string; defaultValue?: string; required?: boolean }) {
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2">
       <Label htmlFor={name}>{label}</Label>
       <Input id={name} name={name} type={type} defaultValue={defaultValue} required={required} />
     </div>
@@ -516,7 +539,7 @@ function Field({ label, name, type = "text", defaultValue, required }: { label: 
 
 function SelectField({ label, name, options = [], defaultValue }: { label: string; name: string; options?: Option[]; defaultValue?: string }) {
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2">
       <Label htmlFor={name}>{label}</Label>
       <Select id={name} name={name} defaultValue={defaultValue ?? options[0]?.value}>
         {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
