@@ -376,8 +376,8 @@ function PaymentReceipt({ payment, onEdit, onDelete }: { payment: Payment; onEdi
 
 function FinanceModal({ title, description, children, onClose, wide = false }: { title: string; description: string; children: React.ReactNode; onClose: () => void; wide?: boolean }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true">
-      <div className={`max-h-[92vh] w-full overflow-hidden rounded-xl border bg-card shadow-2xl ${wide ? "max-w-5xl" : "max-w-3xl"}`}>
+    <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-background/90 p-3 pt-6 backdrop-blur-sm sm:p-6 sm:pt-10 lg:pt-12" role="dialog" aria-modal="true">
+      <div className={`max-h-[calc(100dvh-3rem)] w-full overflow-hidden rounded-xl border bg-card shadow-2xl sm:max-h-[calc(100dvh-5rem)] ${wide ? "max-w-5xl" : "max-w-3xl"}`}>
         <div className="flex items-start justify-between gap-4 border-b p-4 sm:p-5">
           <div className="min-w-0">
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">

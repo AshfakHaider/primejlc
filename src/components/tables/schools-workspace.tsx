@@ -337,9 +337,9 @@ function SchoolModal({ title, description, children, onClose, wide = false }: { 
   }, []);
 
   const modal = (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 p-0 backdrop-blur-sm sm:items-center sm:p-5" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[200] flex items-end justify-center bg-background/90 p-0 backdrop-blur-sm sm:items-start sm:overflow-y-auto sm:p-6 sm:pt-10 lg:pt-12" role="dialog" aria-modal="true">
       <div
-        className={`flex h-[100dvh] w-full flex-col overflow-hidden border bg-card shadow-2xl sm:h-auto sm:max-h-[92dvh] sm:rounded-xl ${
+        className={`flex h-[100dvh] w-full flex-col overflow-hidden border bg-card shadow-2xl sm:h-auto sm:max-h-[calc(100dvh-5rem)] sm:rounded-xl ${
           wide ? "sm:max-w-5xl" : "sm:max-w-4xl"
         }`}
       >

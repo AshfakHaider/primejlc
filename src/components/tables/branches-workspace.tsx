@@ -258,8 +258,8 @@ function BranchModal({
   const description = mode === "create" ? "Create a new agency branch for future filtering, reporting, and role access." : "Update branch contact, manager, and activity status.";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true">
-      <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl border bg-card shadow-2xl">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-background/90 p-3 pt-6 backdrop-blur-sm sm:p-6 sm:pt-10 lg:pt-12" role="dialog" aria-modal="true">
+      <div className="max-h-[calc(100dvh-3rem)] w-full max-w-2xl overflow-y-auto rounded-xl border bg-card shadow-2xl sm:max-h-[calc(100dvh-5rem)]">
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b bg-card/95 p-5 backdrop-blur">
           <div>
             <h2 className="text-xl font-semibold tracking-normal">{title}</h2>

@@ -337,9 +337,9 @@ export function CoursesWorkspace({ initialCourses, students, options, branches, 
 
 function CreateBatchModal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-background/90 p-3 pt-6 backdrop-blur-sm sm:p-6 sm:pt-10 lg:pt-12" role="dialog" aria-modal="true">
       <button className="absolute inset-0 cursor-default" aria-label="Close create batch overlay" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-4xl overflow-hidden rounded-lg border bg-card text-card-foreground shadow-soft">
+      <div className="relative z-10 w-full max-w-4xl overflow-hidden rounded-lg border bg-card text-card-foreground shadow-soft sm:max-h-[calc(100dvh-5rem)]">
         {children}
       </div>
     </div>
