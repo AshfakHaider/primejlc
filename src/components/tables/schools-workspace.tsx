@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   BadgeDollarSign,
   Building2,
@@ -329,7 +330,13 @@ function MetricCard({ icon: Icon, label, value, tone }: { icon: React.ElementTyp
 }
 
 function SchoolModal({ title, description, children, onClose, wide = false }: { title: string; description: string; children: React.ReactNode; onClose: () => void; wide?: boolean }) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const modal = (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 p-0 backdrop-blur-sm sm:items-center sm:p-5" role="dialog" aria-modal="true">
       <div
         className={`flex h-[100dvh] w-full flex-col overflow-hidden border bg-card shadow-2xl sm:h-auto sm:max-h-[92dvh] sm:rounded-xl ${
@@ -352,6 +359,9 @@ function SchoolModal({ title, description, children, onClose, wide = false }: { 
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+  return createPortal(modal, document.body);
 }
 
 function SchoolProfile({ school, options, onEdit, onDelete }: { school: School; options: CrmOptions; onEdit: () => void; onDelete: () => void }) {
