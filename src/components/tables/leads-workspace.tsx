@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { CalendarClock, CheckCircle2, Edit3, Facebook, Kanban, List, MapPin, MessageCircle, Phone, Plus, Search, Sparkles, StickyNote, Trash2, UserPlus, UsersRound, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -574,10 +575,16 @@ function LeadNoteForm({ lead, onSubmit, saving }: { lead: Lead; onSubmit: (event
 }
 
 function LeadModal({ title, description, children, onClose }: { title: string; description: string; children: React.ReactNode; onClose: () => void }) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const modal = (
     <div className="fixed inset-0 z-[200] flex items-start justify-center overflow-y-auto bg-background/90 p-3 pt-6 backdrop-blur-sm sm:p-6 sm:pt-10 lg:pt-12" role="dialog" aria-modal="true">
-      <div className="max-h-[calc(100dvh-3rem)] w-full max-w-3xl overflow-hidden rounded-xl border bg-card shadow-2xl sm:max-h-[calc(100dvh-5rem)]">
-        <div className="flex items-start justify-between gap-4 border-b p-4 sm:p-5">
+      <div className="flex max-h-[calc(100dvh-3rem)] w-full max-w-3xl flex-col overflow-hidden rounded-xl border bg-card shadow-2xl sm:max-h-[calc(100dvh-5rem)]">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b p-4 sm:p-5">
           <div className="min-w-0">
             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-md bg-primary/10 text-primary">
               <UserPlus className="h-5 w-5" />
@@ -589,10 +596,13 @@ function LeadModal({ title, description, children, onClose }: { title: string; d
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="max-h-[calc(92vh-132px)] overflow-y-auto p-4 sm:p-5">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">{children}</div>
       </div>
     </div>
   );
+
+  if (!mounted) return null;
+  return createPortal(modal, document.body);
 }
 
 function MetricCard({ icon: Icon, label, value, tone }: { icon: React.ElementType; label: string; value: string; tone: string }) {
